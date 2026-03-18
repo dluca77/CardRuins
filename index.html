@@ -520,7 +520,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
       <div id="lt">RUINS</div>
       <div id="menu-divider"></div>
       <div id="menu-slogan">Beat the deck.</div>
-      <div id="menu-version">v1.2.4</div>
+      <div id="menu-version">v1.2.5</div>
     </div>
   </div>
   <div id="mright">
@@ -956,7 +956,7 @@ function confirmDialog(title, msg, okLabel, onOk){
   cancel.addEventListener('click',onCancel);
 }
 
-function exitMenu(){document.getElementById('pillarL').style.display='none';document.getElementById('pillarR').style.display='none';gameActive=false;clearInterval(timerInt);_paused=false;document.getElementById('pauseOverlay').classList.remove('show');document.getElementById('ovres').classList.remove('show');document.getElementById('ovfinal').style.display='none';currentLevel=1;totalScore=0;levelScores=new Array(11).fill(0);if(window._musicSetUrgency)window._musicSetUrgency(false);if(_mp.roomId)mpLeaveRoom();document.getElementById('mpHudBar').classList.remove('show');showScreen('smenu');}
+function exitMenu(){document.getElementById('pillarL').style.display='none';document.getElementById('pillarR').style.display='none';gameActive=false;clearInterval(timerInt);_paused=false;document.getElementById('pauseOverlay').classList.remove('show');document.getElementById('ovres').classList.remove('show');document.getElementById('ovfinal').style.display='none';currentLevel=1;totalScore=0;levelScores=new Array(11).fill(0);window._pendingLevelTotal=undefined;window._frozenHudScore=undefined;if(window._musicSetUrgency)window._musicSetUrgency(false);if(_mp.roomId)mpLeaveRoom();document.getElementById('mpHudBar').classList.remove('show');showScreen('smenu');}
 
 function confirmExit(){
   confirmDialog('STOPPEN?','Je verliest je huidige voortgang.','STOPPEN',exitMenu);
@@ -1418,7 +1418,7 @@ function checkExposed(){
   if(pyrGone(2,1,0)&&pyrGone(2,1,1)) tryReveal(2,0,0);
 }
 
-function checkPyrBonus(pi){sfxPyramid();if(pyr[pi].every(r=>r.every(c=>c.removed))){pulseTower(pi);fireworkBurst(pi);const b=getBasis()*15;score+=b;renderHUD();toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'));}}
+function checkPyrBonus(pi){sfxPyramid();if(pyr[pi].every(r=>r.every(c=>c.removed))){pulseTower(pi);fireworkBurst(pi);const b=getBasis()*15;toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL')+' (bonus bij einde level)');}}
 function checkClear(){if(openCards.every(c=>c.removed)&&pyr.every(p=>p.every(r=>r.every(c=>c.removed))))endLevel(true);}
 
 function refreshPyr(pi,row,col){
@@ -1450,7 +1450,9 @@ function renderHUD(animateDiscard){renderScore();renderDiscard(animateDiscard);r
 
 function renderScore(){
   const el=document.getElementById('sval');if(!el)return;
-  const display=totalScore+score;
+  // Als level net klaar is: gebruik bevroren waarde zodat de HUD niet terugspringt.
+  // Anders: totalScore (vorige levels) + lopende kaartscore van dit level.
+  const display=window._frozenHudScore!==undefined?window._frozenHudScore:(totalScore+score);
   el.textContent=display.toLocaleString('nl-NL');
   
 }
@@ -1709,9 +1711,14 @@ function endLevel(win){
   const pb=clearedPyrs*b*15;         // piramide bonus
   const levelTotal=Math.max(0,score+tb+cb+pb);
   const prevTotal=levelScores.reduce((a,v)=>a+v,0);
-  levelScores[currentLevel]=levelTotal;
-  const newTotal=levelScores.reduce((a,v)=>a+v,0);
-  totalScore=newTotal;
+  const newTotal=prevTotal+levelTotal;
+  // totalScore en levelScores worden pas bijgewerkt als speler op 'volgend level' klikt.
+  // Zo staat linksonder bij start volgend level het correcte totaal ZONDER bonussen al meegeteld.
+  // _pendingLevelTotal slaan we op zodat nextLvl() hem kan verwerken.
+  window._pendingLevelTotal=levelTotal;
+  // Bevries de HUD op newTotal zodat hij niet terugspringt naar totalScore.
+  // score wordt pas op 0 gezet nadat showResult aangeroepen is.
+  window._frozenHudScore=newTotal;
   const gp=score; score=0; // save gp dan reset
   saveHS(newTotal);
   // Persoonlijk beste per level opslaan
@@ -1783,6 +1790,10 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
   const btns=document.getElementById('rbtns');btns.innerHTML='';
   if(currentLevel<10){
     btns.innerHTML+=`<button class="rbtn go" onclick="nextLvl()">LEVEL ${currentLevel+1} ▶</button>`;
+  } else if(_mp.roomId){
+    // Multiplayer: na level 10 wacht op room eindstand overlay — geen directe eindstand knop
+    btns.innerHTML+=`<button class="rbtn go" style="opacity:0.6;cursor:default" onclick="void(0)">⏳ WACHT OP EINDSTAND...</button>`;
+    btns.innerHTML+=`<button class="rbtn" style="opacity:0.5;cursor:default;border-color:rgba(255,180,0,.3);color:rgba(255,180,0,.6)" onclick="void(0)">🔒 LEVEL 11 — BINNENKORT</button>`;
   } else {
     btns.innerHTML+=`<button class="rbtn go" onclick="showFinalHS()">🏆 EINDSTAND</button>`;
     btns.innerHTML+=`<button class="rbtn" style="opacity:0.5;cursor:default;border-color:rgba(255,180,0,.3);color:rgba(255,180,0,.6)" onclick="void(0)">🔒 LEVEL 11 — BINNENKORT</button>`;
@@ -1830,6 +1841,13 @@ function showTimeBonusHint(){
 }
 
 function nextLvl(){
+  // Verwerk de pending level bonussen nu pas in totalScore — niet eerder!
+  if(window._pendingLevelTotal!==undefined){
+    levelScores[currentLevel]=window._pendingLevelTotal;
+    totalScore=levelScores.reduce((a,v)=>a+v,0);
+    window._pendingLevelTotal=undefined;
+  }
+  window._frozenHudScore=undefined;
   clearInterval(_mpWaitInterval);
   clearInterval(_mpCountdownInt);
   _mpWaitInterval=null;
@@ -1858,7 +1876,7 @@ function nextLvl(){
     doNext();
   }
 }
-function retryLvl(){document.getElementById('ovres').classList.remove('show');currentLevel=1;totalScore=0;levelScores=new Array(11).fill(0);initLevel(1);}
+function retryLvl(){document.getElementById('ovres').classList.remove('show');currentLevel=1;totalScore=0;levelScores=new Array(11).fill(0);window._pendingLevelTotal=undefined;window._frozenHudScore=undefined;initLevel(1);}
 
 async function _submitScoreOnResultScreen(score){
   // Naam vragen op het resultaatscherm zelf
@@ -1877,6 +1895,12 @@ async function _submitScoreOnResultScreen(score){
 }
 
 async function showFinalHS(){
+  // Verwerk pending level bonussen als speler direct naar eindscherm gaat (level 10)
+  if(window._pendingLevelTotal!==undefined){
+    levelScores[currentLevel]=window._pendingLevelTotal;
+    totalScore=levelScores.reduce((a,v)=>a+v,0);
+    window._pendingLevelTotal=undefined;
+  }
   document.getElementById('ovres').classList.remove('show');
   const ov=document.getElementById('ovfinal');
   ov.style.display='flex';
@@ -3699,12 +3723,23 @@ async function _mpShowResults(){
     </div>`;
   }).join('');
 
-  // Voeg terug naar menu knop toe
+  // Voeg eindstand knop en menu knop toe
+  const btnWrap=document.createElement('div');
+  btnWrap.style.cssText='display:flex;flex-direction:column;gap:10px;margin-top:14px;width:100%;max-width:280px';
+
+  const finalBtn=document.createElement('button');
+  finalBtn.textContent='🏆 JOUW EINDSTAND';
+  finalBtn.style.cssText='font-family:Russo One,sans-serif;font-size:11px;letter-spacing:1px;padding:12px 24px;border-radius:12px;border:1px solid rgba(255,215,0,.5);background:rgba(255,200,60,.15);color:#ffd070;cursor:pointer;width:100%';
+  finalBtn.onclick=()=>{ov.classList.remove('show');showFinalHS();};
+  btnWrap.appendChild(finalBtn);
+
   const backBtn=document.createElement('button');
   backBtn.textContent='← TERUG NAAR MENU';
-  backBtn.style.cssText='margin-top:14px;font-family:Russo One,sans-serif;font-size:11px;letter-spacing:1px;padding:12px 24px;border-radius:12px;border:1px solid rgba(200,140,40,.3);background:rgba(255,200,60,.08);color:#ffd070;cursor:pointer;width:100%;max-width:280px';
+  backBtn.style.cssText='font-family:Russo One,sans-serif;font-size:11px;letter-spacing:1px;padding:12px 24px;border-radius:12px;border:1px solid rgba(200,140,40,.3);background:rgba(255,200,60,.08);color:#ffd070;cursor:pointer;width:100%';
   backBtn.onclick=()=>exitMenu();
-  container.appendChild(backBtn);
+  btnWrap.appendChild(backBtn);
+
+  container.appendChild(btnWrap);
 
   document.getElementById('mpWaitTitle').textContent='🏆 GAME OVER';
   ov.classList.add('show');
@@ -3717,6 +3752,12 @@ let _mpCountdownInt=null;
 
 async function _mpFinishGame(){
   if(!_mp.roomId) return;
+  // Verwerk pending bonussen zodat de juiste score naar Supabase gaat
+  if(window._pendingLevelTotal!==undefined){
+    levelScores[currentLevel]=window._pendingLevelTotal;
+    totalScore=levelScores.reduce((a,v)=>a+v,0);
+    window._pendingLevelTotal=undefined;
+  }
   await _supabase.from('room_players').update({score:totalScore,status:'finished'}).eq('id',_mp.playerId);
   const{data:players}=await _supabase.from('room_players').select('*').eq('room_id',_mp.roomId);
   const allDone=players&&players.every(p=>p.status==='finished'||p.status==='watching');
@@ -3728,6 +3769,12 @@ async function _mpFinishGame(){
 async function _mpLevelDone(levelNum){
   if(!_mp.roomId||!_mp.playerId) return;
   _mpLevelDoneAt=levelNum;
+  // Verwerk pending bonussen zodat de juiste score naar Supabase gaat
+  if(window._pendingLevelTotal!==undefined){
+    levelScores[levelNum]=window._pendingLevelTotal;
+    totalScore=levelScores.reduce((a,v)=>a+v,0);
+    window._pendingLevelTotal=undefined;
+  }
   await _supabase.from('room_players')
     .update({score:totalScore,status:'level_done_'+levelNum})
     .eq('id',_mp.playerId);
@@ -4027,7 +4074,7 @@ async function submitOnlineScore(score){
     <div style="background:rgba(10,4,0,.98);border-bottom:1px solid rgba(200,140,40,.2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5">
       <div>
         <div style="font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:3px;color:#ffd070">⚔️ ADMIN</div>
-        <div style="font-size:10px;color:rgba(255,100,80,.7);letter-spacing:2px">CARD RUINS v1.2.4</div>
+        <div style="font-size:10px;color:rgba(255,100,80,.7);letter-spacing:2px">CARD RUINS v1.2.5</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span id="aLastRefresh" style="font-size:10px;color:rgba(255,255,255,.25)"></span>
