@@ -3660,8 +3660,16 @@ function mpWatchGame(){
 }
 
 async function mpLeaveRoom(){
+  const leftRoomId=_mp.roomId;
   if(_mp.playerId){
     await _supabase.from('room_players').delete().eq('id',_mp.playerId);
+  }
+  // Als room leeg is, gelijk sluiten
+  if(leftRoomId){
+    const{data:remaining}=await _supabase.from('room_players').select('id').eq('room_id',leftRoomId);
+    if(!remaining||remaining.length===0){
+      await _supabase.from('rooms').delete().eq('id',leftRoomId);
+    }
   }
   if(_mp.channel) _mp.channel.unsubscribe();
   clearInterval(_mpWaitInterval);
@@ -3676,6 +3684,9 @@ async function mpLeaveRoom(){
   document.getElementById('ovroom').classList.remove('show');
   document.getElementById('mpHudBar').classList.remove('show');
   document.getElementById('mpHudBar').innerHTML='<div id="mpScores"></div>';
+  // Reset create room knop
+  const createBtn=document.querySelector('[onclick="mpCreateRoom()"]');
+  if(createBtn){createBtn.disabled=false;createBtn.textContent='🏠 CREATE ROOM';}
 }
 
 async function _mpShowResults(){
