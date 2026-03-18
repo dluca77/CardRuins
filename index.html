@@ -1354,7 +1354,7 @@ function afterPlay(){
   checkClear();
   for(let pi=0;pi<3;pi++)for(let row=0;row<3;row++)for(let col=0;col<pyr[pi][row].length;col++)refreshPyr(pi,row,col);
   for(let i=0;i<10;i++)refreshOpen(i);
-  renderHUD();
+  if(gameActive) renderHUD();
   checkDeadlock();
 }
 
@@ -1419,7 +1419,7 @@ function checkExposed(){
   if(pyrGone(2,1,0)&&pyrGone(2,1,1)) tryReveal(2,0,0);
 }
 
-function checkPyrBonus(pi){sfxPyramid();if(pyr[pi].every(r=>r.every(c=>c.removed))){pulseTower(pi);fireworkBurst(pi);const b=getBasis()*15;score+=b;renderHUD();toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'));}}
+function checkPyrBonus(pi){sfxPyramid();if(pyr[pi].every(r=>r.every(c=>c.removed))){pulseTower(pi);fireworkBurst(pi);const b=getBasis()*15;toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'));}}
 function checkClear(){if(openCards.every(c=>c.removed)&&pyr.every(p=>p.every(r=>r.every(c=>c.removed))))endLevel(true);}
 
 function refreshPyr(pi,row,col){
