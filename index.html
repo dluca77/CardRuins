@@ -1423,9 +1423,11 @@ function checkExposed(){
 function checkPyrBonus(pi){if(pyr[pi].every(r=>r.every(c=>!c||c.removed))){try{sfxPyramid();}catch(e){}try{pulseTower(pi);}catch(e){}try{fireworkBurst(pi);}catch(e){}const b=getBasis()*15;score+=b;renderHUD();
   // Big score pop boven de piramide
   try{
-    const pyrEls=document.querySelectorAll(`[data-pi="${pi}"]`);
-    let px=window.innerWidth/2, py=window.innerHeight*0.3;
-    if(pyrEls.length){const r=pyrEls[0].getBoundingClientRect();px=r.left+r.width/2;py=r.top;}
+    const scene=document.getElementById('scene');
+    const sr=scene?scene.getBoundingClientRect():{left:0,top:0};
+    const pyrOff=(SCENE_W-THREE_W)/2;
+    const px=sr.left+pyrOff+pi*(PYR_W+PYR_GAP)+PYR_W/2;
+    const py=sr.top+CH;
     const pop=document.createElement('div');
     pop.className='spop pyr';
     pop.textContent='+'+b.toLocaleString('nl-NL');
