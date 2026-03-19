@@ -226,13 +226,13 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 .pset-lbl{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:rgba(240,220,180,.85);letter-spacing:1px}
 .pset-sub{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.3);font-family:'Rajdhani',sans-serif}
 
-#timebonus-pop{position:fixed;top:60px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:401;font-family:'Russo One',sans-serif;font-size:13px;color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,.8);letter-spacing:1px;opacity:0;transition:opacity 0.2s}
+#timebonus-pop{position:fixed;top:60px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:401;font-family:'Russo One',sans-serif;font-size:14px;color:rgba(255,215,0,.5);text-shadow:0 0 16px rgba(255,215,0,.9),0 0 32px rgba(255,180,0,.6);letter-spacing:1px;opacity:0;background:none;border:none;transition:opacity 0.2s}
 #timebonus-pop.show{opacity:1}
 .spop.pyr{font-size:28px;color:#ffd070;text-shadow:0 0 16px rgba(255,210,0,.9),0 0 32px rgba(255,180,0,.6);animation:sp 1.2s cubic-bezier(.2,.8,.3,1) forwards}
 .spop{position:fixed;pointer-events:none;z-index:300;display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:17px;font-weight:900;text-align:center;line-height:1;animation:sp .9s cubic-bezier(.2,.8,.3,1) forwards;transform:translate(-50%,-50%);color:#80ffaa;text-shadow:0 0 10px rgba(80,255,140,.8),0 0 20px rgba(80,255,140,.4);letter-spacing:1px}
 .spop.neg{color:#ff7060;text-shadow:0 0 10px rgba(255,80,60,.8),0 0 20px rgba(255,80,60,.4)}
 @keyframes sp{0%{opacity:0;transform:translate(-50%,-50%) scale(0.4)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}30%{transform:translate(-50%,-70%) scale(1)}70%{opacity:1;transform:translate(-50%,-180%) scale(1)}100%{opacity:0;transform:translate(-50%,-280%) scale(0.7)}}
-#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:transparent;border:none;color:rgba(255,255,255,.95);font-family:'Russo One',sans-serif;font-size:13px;padding:7px 20px;border-radius:20px;z-index:400;pointer-events:none;opacity:0;text-shadow:0 0 12px rgba(255,255,255,.8),0 0 24px rgba(255,255,255,.4);letter-spacing:1px;transition:opacity .2s;white-space:nowrap}
+#toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:none!important;border:none!important;box-shadow:none!important;color:rgba(255,255,255,.5);font-family:'Russo One',sans-serif;font-size:16px;letter-spacing:2px;padding:0;border-radius:0;z-index:400;pointer-events:none;opacity:0;text-shadow:0 0 16px rgba(255,255,255,.9),0 0 32px rgba(255,255,255,.5);white-space:nowrap;transition:opacity .2s;white-space:nowrap}
 #toast.show{opacity:1}
 #ovres{position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,rgba(10,5,0,.97) 0%,rgba(25,12,0,.98) 100%);backdrop-filter:blur(16px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
 #ovres.show{display:flex}
@@ -408,8 +408,8 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 .fw-burst{position:fixed;pointer-events:none;z-index:500}
 .fw-spark{position:absolute;width:6px;height:6px;border-radius:50%;animation:fwSpark 0.7s ease-out forwards}
 
-@keyframes milestoneToast{0%{opacity:0;transform:translateX(-50%) scale(0.7) translateY(10px)}15%{opacity:1;transform:translateX(-50%) scale(1.1) translateY(0)}25%{transform:translateX(-50%) scale(1) translateY(0)}80%{opacity:1;transform:translateX(-50%) scale(1) translateY(0)}100%{opacity:0;transform:translateX(-50%) scale(0.9) translateY(-10px)}}
-.milestone-toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:450;font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;text-shadow:0 0 20px currentColor,0 0 40px currentColor;white-space:nowrap;animation:milestoneToast 2s ease forwards}
+@keyframes milestoneToastFade{0%{opacity:0;transform:translateX(-50%) scale(0.7) translateY(10px)}15%{opacity:0.5;transform:translateX(-50%) scale(1.1) translateY(0)}25%{transform:translateX(-50%) scale(1) translateY(0)}80%{opacity:0.5;transform:translateX(-50%) scale(1) translateY(0)}100%{opacity:0;transform:translateX(-50%) scale(0.9) translateY(-8px)}}25%{transform:translateX(-50%) scale(1) translateY(0)}80%{opacity:1;transform:translateX(-50%) scale(1) translateY(0)}100%{opacity:0;transform:translateX(-50%) scale(0.9) translateY(-10px)}}
+.milestone-toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:450;font-family:'Russo One',sans-serif;font-size:22px;letter-spacing:3px;color:#fff;text-shadow:0 0 20px currentColor,0 0 40px currentColor;white-space:nowrap;animation:milestoneToastFade 2s ease forwards;background:none!important;border:none!important;box-shadow:none!important}
 
 /* ── MULTIPLAYER ── */
 #ovmodeselect,#ovmultiplayer,#ovroom{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);backdrop-filter:blur(16px);align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:env(safe-area-inset-top,16px) 16px env(safe-area-inset-bottom,16px)}
@@ -544,7 +544,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
       <div id="lt">RUINS</div>
       <div id="menu-divider"></div>
       <div id="menu-slogan">Beat the deck.</div>
-      <div id="menu-version">v1.2.7</div>
+      <div id="menu-version">v1.2.8</div>
     </div>
   </div>
   <div id="mright">
@@ -890,6 +890,8 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
     <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:rgba(255,255,255,.4);letter-spacing:2px">VOLGEND LEVEL OVER</div>
     <div class="mp-countdown" id="mpCountdownNum">5</div>
   </div>
+  <!-- Exit button -->
+  <button onclick="confirmDialog('STOPPEN?','Je verlaat het multiplayer potje.','STOPPEN',()=>{mpLeaveRoom();exitMenu();})" style="background:rgba(139,26,26,.6);border:1px solid rgba(200,60,60,.3);color:rgba(255,180,180,.7);font-family:'Russo One',sans-serif;font-size:10px;letter-spacing:2px;padding:8px 20px;border-radius:20px;cursor:pointer;margin-top:4px">✕ VERLATEN</button>
 </div>
 
 <div id="pauseOverlay">
@@ -4860,7 +4862,7 @@ let _mpTipIdx=0,_mpTipInt=null;
 function _mpStartTips(){
   // Update score box
   const sb=document.getElementById('mpWaitMyScore');
-  if(sb){const lvlTotal=Math.max(0,(typeof score!=='undefined'?score:0)+(typeof levelScores!=='undefined'?levelScores.reduce((a,v)=>a+v,0):0));sb.textContent=lvlTotal.toLocaleString('nl-NL');}
+  if(sb){const lvlTotal=typeof levelScores!=='undefined'?levelScores.reduce((a,v)=>a+v,0):0;sb.textContent=lvlTotal.toLocaleString('nl-NL');}
   const el=document.getElementById('mpWaitTip');
   if(!el)return;
   _mpTipIdx=Math.floor(Math.random()*_mpWaitTips.length);
