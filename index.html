@@ -150,7 +150,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;back
 .volsl::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#a8e060}
 #sgame{display:none;position:fixed;inset:0;z-index:10}
 #sgame.active{display:block}
-#scenewrap{position:absolute;left:0;right:0;top:0;bottom:clamp(80px,13vh,108px);display:flex;align-items:center;justify-content:center;z-index:5}
+#scenewrap{position:absolute;left:0;right:0;top:0;bottom:108px;display:flex;align-items:center;justify-content:center;z-index:5;transition:top 0.2s}
+#mpHudBar.show~#sgame #scenewrap,#sgame #scenewrap.mp-active{top:var(--mp-bar-h,0px)}
 #scene{position:relative;touch-action:manipulation;user-select:none}
 .card{position:absolute;border-radius:7px;touch-action:manipulation}
 .card.down{background:transparent;border:none;box-shadow:0 4px 14px rgba(0,0,60,.7)}
@@ -169,7 +170,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;back
 body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px) rotate(-3deg)}40%{transform:translateX(8px) rotate(3deg)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}
 .card.wrong{animation:shake .25s ease-out forwards!important;pointer-events:none}
-#hud{position:absolute;bottom:0;left:0;right:0;height:clamp(80px,13vh,108px);z-index:20;background:linear-gradient(180deg,rgba(20,10,0,.95) 0%,rgba(12,6,0,.98) 100%);border-top:1px solid rgba(200,130,40,.3);box-shadow:0 -4px 0 rgba(0,0,0,.5),0 -8px 30px rgba(40,20,0,.8),inset 0 1px 0 rgba(200,140,40,.08);display:flex;align-items:center;padding:0 14px;gap:10px;backdrop-filter:blur(20px)}
+#hud{position:absolute;bottom:0;left:0;right:0;height:108px;z-index:20;background:linear-gradient(180deg,rgba(20,10,0,.95) 0%,rgba(12,6,0,.98) 100%);border-top:1px solid rgba(200,130,40,.3);box-shadow:0 -4px 0 rgba(0,0,0,.5),0 -8px 30px rgba(40,20,0,.8),inset 0 1px 0 rgba(200,140,40,.08);display:flex;align-items:center;padding:0 14px;gap:10px;backdrop-filter:blur(20px)}
 #hud::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15) 30%,rgba(255,255,255,.08) 70%,transparent)}
 .sdiv{width:1px;height:70px;flex-shrink:0;background:linear-gradient(180deg,transparent,rgba(180,120,40,.25) 30%,rgba(220,160,60,.15) 50%,rgba(180,120,40,.25) 70%,transparent);border-radius:1px}
 #sblock{display:flex;flex-direction:column;align-items:flex-start;width:160px;flex-shrink:0}
@@ -918,7 +919,9 @@ let CW,CH,OV,HG,PYR_GAP,PYR_W,THREE_W,OPEN_W,SCENE_W,SCENE_H;
 
 function calcLayout(){
   const W=window.innerWidth;
-  const H=window.innerHeight-Math.round(Math.min(108,Math.max(80,window.innerHeight*0.13)));
+  const mpBar=document.getElementById('mpHudBar');
+  const mpBarH=(mpBar&&mpBar.classList.contains('show'))?mpBar.offsetHeight:0;
+  const H=window.innerHeight-108-mpBarH;
   const padX=Math.floor(W*0.06);
   const padY=Math.floor(H*0.06);
   const availW=W-padX*2;
@@ -1000,7 +1003,7 @@ function exitMenu(){
   if(bgimg){bgimg.style.filter='';}
   const scene=document.getElementById('scene');
   if(scene){scene.style.filter='';}
-  document.getElementById('pillarL').style.display='none';document.getElementById('pillarR').style.display='none';gameActive=false;clearInterval(timerInt);_paused=false;document.getElementById('pauseOverlay').classList.remove('show');document.getElementById('ovres').classList.remove('show');document.getElementById('ovfinal').style.display='none';currentLevel=1;totalScore=0;levelScores=new Array(11).fill(0);if(window._musicSetUrgency)window._musicSetUrgency(false);if(_mp.roomId)mpLeaveRoom();document.getElementById('mpHudBar').classList.remove('show');showScreen('smenu');}
+  document.getElementById('pillarL').style.display='none';document.getElementById('pillarR').style.display='none';gameActive=false;clearInterval(timerInt);_paused=false;document.getElementById('pauseOverlay').classList.remove('show');document.getElementById('ovres').classList.remove('show');document.getElementById('ovfinal').style.display='none';currentLevel=1;totalScore=0;levelScores=new Array(11).fill(0);if(window._musicSetUrgency)window._musicSetUrgency(false);if(_mp.roomId)mpLeaveRoom();const _mpbar=document.getElementById('mpHudBar');_mpbar.classList.remove('show');const _sw=document.getElementById('scenewrap');if(_sw){_sw.style.top='';_sw.classList.remove('mp-active');}document.documentElement.style.removeProperty('--mp-bar-h');showScreen('smenu');}
 
 function confirmExit(){
   confirmDialog('STOPPEN?','Je verliest je huidige voortgang.','STOPPEN',exitMenu);
@@ -3623,6 +3626,8 @@ async function _mpLoadLevel(level){
   score=0;combo=0;frozen=false;_pyrBonusClaimed=[false,false,false];
   totalScore=levelScores.reduce((a,v)=>a+v,0);
   if(typeof achOnGameStart==='function')achOnGameStart();
+  // Sync score immediately so MP bar shows correct accumulated score
+  if(_mp.playerId) _supabase.from('room_players').update({score:totalScore}).eq('id',_mp.playerId).then(()=>{});
   timer=LEVEL_TIME[level];gameActive=true;
   document.getElementById('lvlval').textContent=level+'/10';
   calcLayout();buildScene();initTowers();checkExposed();
@@ -3640,7 +3645,20 @@ async function _mpSyncScore(){
 }
 
 function _mpShowHud(){
-  document.getElementById('mpHudBar').classList.add('show');
+  const bar=document.getElementById('mpHudBar');
+  bar.classList.add('show');
+  // Give browser time to render bar, then recalculate layout
+  requestAnimationFrame(()=>{
+    const h=bar.offsetHeight;
+    document.documentElement.style.setProperty('--mp-bar-h', h+'px');
+    const sw=document.getElementById('scenewrap');
+    if(sw){sw.style.top=h+'px';sw.classList.add('mp-active');}
+    if(typeof calcLayout==='function'&&typeof buildScene==='function'){
+      calcLayout();buildScene();
+      for(let pi=0;pi<3;pi++)for(let row=0;row<3;row++)for(let col=0;col<(pyr[pi]&&pyr[pi][row]?pyr[pi][row].length:0);col++)refreshPyr(pi,row,col);
+      for(let i=0;i<10;i++)refreshOpen(i);
+    }
+  });
   _mpUpdateHud();
 }
 
