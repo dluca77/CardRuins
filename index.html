@@ -1777,10 +1777,11 @@ function endLevel(win){
   const neverOpened=drawPile.length; // kaarten die nooit getrokken zijn
   const cb=neverOpened*b*3;          // altijd tellen, ook bij verlies
   const pb=0; // piramide bonus zit al live in score
-  if(win){achOnWin(currentLevel,timer,newTotal);}else{achOnGameOver();}const levelTotal=Math.max(0,score+tb+cb);
+  const levelTotal=Math.max(0,score+tb+cb);
   const prevTotal=levelScores.reduce((a,v)=>a+v,0);
   levelScores[currentLevel]=levelTotal;
   const newTotal=levelScores.reduce((a,v)=>a+v,0);
+  if(win){achOnWin(currentLevel,timer,newTotal);}else{achOnGameOver();}
   // totalScore pas bijwerken als volgend level start, niet al tijdens resultaatscherm
   const gp=score; score=0; // save gp dan reset
   saveHS(newTotal);
