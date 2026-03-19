@@ -226,6 +226,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 #timebonus-pop{position:fixed;top:60px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:401;font-family:'Russo One',sans-serif;font-size:13px;color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,.8);letter-spacing:1px;opacity:0;transition:opacity 0.2s}
 #timebonus-pop.show{opacity:1}
 .spop{position:fixed;pointer-events:none;z-index:300;display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:17px;font-weight:900;text-align:center;line-height:1;animation:sp .9s cubic-bezier(.2,.8,.3,1) forwards;transform:translate(-50%,-50%);color:#80ffaa;text-shadow:0 0 10px rgba(80,255,140,.8),0 0 20px rgba(80,255,140,.4);letter-spacing:1px}
+.spop.pyr{font-size:28px;color:#ffd070;text-shadow:0 0 16px rgba(255,210,0,.9),0 0 32px rgba(255,180,0,.6);animation:sp 1.2s cubic-bezier(.2,.8,.3,1) forwards}
 .spop.neg{color:#ff7060;text-shadow:0 0 10px rgba(255,80,60,.8),0 0 20px rgba(255,80,60,.4)}
 @keyframes sp{0%{opacity:0;transform:translate(-50%,-50%) scale(0.4)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}30%{transform:translate(-50%,-70%) scale(1)}70%{opacity:1;transform:translate(-50%,-180%) scale(1)}100%{opacity:0;transform:translate(-50%,-280%) scale(0.7)}}
 #toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.92);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.85);font-family:'Russo One',sans-serif;font-size:12px;padding:7px 20px;border-radius:20px;z-index:400;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
@@ -1419,7 +1420,20 @@ function checkExposed(){
   if(pyrGone(2,1,0)&&pyrGone(2,1,1)) tryReveal(2,0,0);
 }
 
-function checkPyrBonus(pi){if(pyr[pi].every(r=>r.every(c=>!c||c.removed))){try{sfxPyramid();}catch(e){}try{pulseTower(pi);}catch(e){}try{fireworkBurst(pi);}catch(e){}const b=getBasis()*15;score+=b;renderHUD();showMilestoneToast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'),'#ffd070');}}
+function checkPyrBonus(pi){if(pyr[pi].every(r=>r.every(c=>!c||c.removed))){try{sfxPyramid();}catch(e){}try{pulseTower(pi);}catch(e){}try{fireworkBurst(pi);}catch(e){}const b=getBasis()*15;score+=b;renderHUD();
+  // Big score pop boven de piramide
+  try{
+    const pyrEls=document.querySelectorAll(`[data-pi="${pi}"]`);
+    let px=window.innerWidth/2, py=window.innerHeight*0.3;
+    if(pyrEls.length){const r=pyrEls[0].getBoundingClientRect();px=r.left+r.width/2;py=r.top;}
+    const pop=document.createElement('div');
+    pop.className='spop pyr';
+    pop.textContent='+'+b.toLocaleString('nl-NL');
+    pop.style.cssText=`left:${px}px;top:${py}px`;
+    document.body.appendChild(pop);
+    setTimeout(()=>pop.remove(),1200);
+  }catch(e){}
+  showMilestoneToast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'),'#ffd070');}}
 function checkClear(){if(openCards.every(c=>c.removed)&&pyr.every(p=>p.every(r=>r.every(c=>c.removed))))endLevel(true);}
 
 function refreshPyr(pi,row,col){
