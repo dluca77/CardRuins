@@ -676,6 +676,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
   <button class="backbtn" onclick="hideOv('settings')">← TERUG</button>
 </div>
 <div id="sgame" class="screen">
+  <div id="toast" style="position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(10,5,0,.95);border:1px solid rgba(200,140,40,.7);color:#ffd070;font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:1px;padding:10px 22px;border-radius:20px;z-index:9999;opacity:0;transition:opacity 0.25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center"></div>
   <div id="scenewrap"><div id="scene"></div></div>
   <div id="timebonus-pop">⏱ TIJDBONUS!</div>
   <div id="hud">
@@ -1420,7 +1421,18 @@ function checkExposed(){
   if(pyrGone(2,1,0)&&pyrGone(2,1,1)) tryReveal(2,0,0);
 }
 
-function checkPyrBonus(pi){if(_pyrBonusClaimed[pi])return;if(pyr[pi].every(r=>r.every(c=>!c||c.removed))){_pyrBonusClaimed[pi]=true;sfxPyramid();pulseTower(pi);fireworkBurst(pi);const b=getBasis()*15;score+=b;renderHUD();toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'));}}
+function checkPyrBonus(pi){
+  if(_pyrBonusClaimed[pi])return;
+  const allRemoved = pyr[pi].every(r=>r.every(c=>!c||c.removed));
+  if(allRemoved){
+    _pyrBonusClaimed[pi]=true;
+    sfxPyramid();pulseTower(pi);fireworkBurst(pi);
+    const b=getBasis()*15;
+    score+=b;
+    renderHUD();
+    showMilestoneToast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'),'#ffd070');
+  }
+}
 function checkClear(){if(openCards.every(c=>c.removed)&&pyr.every(p=>p.every(r=>r.every(c=>c.removed))))endLevel(true);}
 
 function refreshPyr(pi,row,col){
