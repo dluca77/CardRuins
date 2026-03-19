@@ -409,7 +409,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 .fw-spark{position:absolute;width:6px;height:6px;border-radius:50%;animation:fwSpark 0.7s ease-out forwards}
 
 @keyframes milestoneToast{0%{opacity:0;transform:translateX(-50%) scale(0.7) translateY(10px)}15%{opacity:1;transform:translateX(-50%) scale(1.1) translateY(0)}25%{transform:translateX(-50%) scale(1) translateY(0)}80%{opacity:1;transform:translateX(-50%) scale(1) translateY(0)}100%{opacity:0;transform:translateX(-50%) scale(0.9) translateY(-10px)}}
-.milestone-toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:450;font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;text-shadow:0 0 20px currentColor;padding:8px 24px;border-radius:30px;white-space:nowrap;animation:milestoneToast 2s ease forwards}
+.milestone-toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:450;font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;text-shadow:0 0 20px currentColor,0 0 40px currentColor;white-space:nowrap;animation:milestoneToast 2s ease forwards}
 
 /* ── MULTIPLAYER ── */
 #ovmodeselect,#ovmultiplayer,#ovroom{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);backdrop-filter:blur(16px);align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:env(safe-area-inset-top,16px) 16px env(safe-area-inset-bottom,16px)}
@@ -430,7 +430,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 .mp-pbadge.playing{background:rgba(60,200,60,.15);color:#60ff80;border:1px solid rgba(60,200,60,.25)}
 .mp-pbadge.watching{background:rgba(100,150,255,.15);color:#80b0ff;border:1px solid rgba(100,150,255,.25)}
 .mp-pbadge.finished{background:rgba(255,150,40,.15);color:#ffa040;border:1px solid rgba(255,150,40,.25)}
-#mpHudBar{display:none;position:fixed;top:0;left:0;right:0;z-index:15;background:rgba(5,3,0,.85);border-bottom:1px solid rgba(200,140,40,.15);padding:2px 8px;backdrop-filter:blur(10px);font-size:11px;transition:transform 0.3s}
+#mpHudBar{display:none;position:fixed;top:0;left:0;right:0;z-index:15;background:rgba(0,0,0,.35);border-bottom:1px solid rgba(200,140,40,.08);padding:2px 8px;backdrop-filter:blur(4px);font-size:11px}
 #mpHudBar.collapsed{transform:translateY(calc(-100% + 6px))}
 #mpHudBar.show{display:block}
 #mpScores{display:flex;gap:6px;overflow-x:auto;justify-content:center;align-items:center}
@@ -506,6 +506,10 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 .ach-card.locked .ach-card-name{color:rgba(255,255,255,.4)}
 .ach-card-desc{font-family:'Rajdhani',sans-serif;font-size:10px;color:rgba(255,255,255,.6);line-height:1.3}
 .ach-card-date{font-family:'Rajdhani',sans-serif;font-size:9px;color:rgba(255,180,0,.5);margin-top:4px}
+
+/* MP Wait overlay extras */
+.mp-float-card{position:absolute;font-size:80px;bottom:-100px;animation:mpFloatCard 6s ease-in infinite;color:white}
+@keyframes mpFloatCard{0%{transform:translateY(0) rotate(-10deg);opacity:0}10%{opacity:1}90%{opacity:0.5}100%{transform:translateY(calc(-100vh - 120px)) rotate(15deg);opacity:0}}
 </style>
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIkNhcmQgUnVpbnMiLCAic2hvcnRfbmFtZSI6ICJDYXJkIFJ1aW5zIiwgImRlc2NyaXB0aW9uIjogIkJlYXQgdGhlIGRlY2suIFRyaVBlYWtzIHNvbGl0YWlyZSBrYWFydHNwZWwuIiwgInN0YXJ0X3VybCI6ICIuLyIsICJkaXNwbGF5IjogImZ1bGxzY3JlZW4iLCAib3JpZW50YXRpb24iOiAibGFuZHNjYXBlIiwgImJhY2tncm91bmRfY29sb3IiOiAiIzA1MDUxYSIsICJ0aGVtZV9jb2xvciI6ICIjMDUwNTFhIiwgImljb25zIjogW119">
 <meta name="theme-color" content="#05051a">
@@ -852,11 +856,36 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 </div>
 
 <div id="mpWaitOverlay">
+  <!-- Animated floating cards background -->
+  <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
+    <div class="mp-float-card" style="left:5%;animation-delay:0s;animation-duration:7s">🂡</div>
+    <div class="mp-float-card" style="left:18%;animation-delay:1.2s;animation-duration:8s">🂮</div>
+    <div class="mp-float-card" style="left:32%;animation-delay:0.5s;animation-duration:6s">🂫</div>
+    <div class="mp-float-card" style="left:47%;animation-delay:2.1s;animation-duration:9s">🂭</div>
+    <div class="mp-float-card" style="left:62%;animation-delay:0.9s;animation-duration:7s">🂱</div>
+    <div class="mp-float-card" style="left:76%;animation-delay:1.6s;animation-duration:8s">🂾</div>
+    <div class="mp-float-card" style="left:88%;animation-delay:0.3s;animation-duration:6.5s">🂢</div>
+  </div>
+
+  <!-- Title -->
   <div class="mp-wait-title" id="mpWaitTitle">⏳ LEVEL VOLTOOID</div>
   <div class="mp-wait-sub" id="mpWaitSub">Wacht op andere spelers...</div>
+
+  <!-- Live score preview -->
+  <div id="mpWaitScoreBox" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,200,80,.15);border-radius:14px;padding:10px 24px;text-align:center;min-width:220px">
+    <div style="font-family:'Rajdhani',sans-serif;font-size:10px;color:rgba(255,255,255,.35);letter-spacing:2px;margin-bottom:4px">JOUW SCORE DIT LEVEL</div>
+    <div id="mpWaitMyScore" style="font-family:'Russo One',sans-serif;font-size:26px;color:#ffd700;text-shadow:0 0 20px rgba(255,215,0,.4)">0</div>
+  </div>
+
+  <!-- Players status -->
   <div class="mp-wait-panel">
     <div class="mp-wait-players" id="mpWaitPlayers"></div>
   </div>
+
+  <!-- Rotating tips -->
+  <div id="mpWaitTip" style="font-family:'Rajdhani',sans-serif;font-size:13px;color:rgba(255,200,80,.55);text-align:center;max-width:300px;line-height:1.5;padding:0 20px;min-height:36px;transition:opacity 0.4s"></div>
+
+  <!-- Countdown -->
   <div id="mpCountdownDisp" style="display:none;flex-direction:column;align-items:center;gap:4px">
     <div style="font-family:'Rajdhani',sans-serif;font-size:12px;color:rgba(255,255,255,.4);letter-spacing:2px">VOLGEND LEVEL OVER</div>
     <div class="mp-countdown" id="mpCountdownNum">5</div>
@@ -1886,6 +1915,7 @@ function nextLvl(){
   _mpWaitInterval=null;
   _mpCountdownInt=null;
   document.getElementById('mpWaitOverlay').classList.remove('show');
+  _mpStopTips();
   if(_mp.roomId) _mpResetLevelStatus();
 
   const doNext=async()=>{
@@ -2757,7 +2787,6 @@ function showMilestoneToast(text, color){
   el.textContent=text;
   el.style.color=color;
   el.style.textShadow=`0 0 20px ${color}, 0 0 40px ${color}`;
-  el.style.background=`radial-gradient(ellipse,${color}22,transparent 70%)`;
   document.body.appendChild(el);
   setTimeout(()=>el.remove(),2100);
 }
@@ -3820,6 +3849,7 @@ async function _mpFinishGame(){
   document.getElementById('mpWaitTitle').textContent='⏳ WACHTEN';
   document.getElementById('mpWaitSub').textContent='Jij bent klaar! Wacht op andere spelers...';
   ov.classList.add('show');
+  _mpStartTips();
   _mpUpdateFinishWait();
   clearInterval(_mpWaitInterval);
   _mpWaitInterval=setInterval(async()=>{
@@ -4813,6 +4843,38 @@ function achOnMpWin(){
 function achOnMpLose(){
   const stats=_achStats();stats.mpWinsOpRij=0;_achSaveStats(stats);
 }
+
+// ── MP WAIT TIPS ──────────────────────────────────────────────
+const _mpWaitTips=[
+  '💡 Tip: Probeer je combo zo lang mogelijk te houden!',
+  '🏛 Tip: Alle 3 piramides leeg geeft een grote bonus!',
+  '⚡ Tip: Hoe hoger je combo, hoe meer punten per kaart!',
+  '🎁 Tip: Bij combo 3+ krijg je een gratis bonuskaart!',
+  '🔒 Tip: Ongetrokken kaarten leveren ook punten op!',
+  '⏱ Tip: Snel spelen geeft een hogere tijdbonus!',
+  '🎯 Tip: Fouten kosten punten én resetten je combo!',
+  '👑 Tip: Win alle 10 levels zonder game over voor de Meester achievement!',
+  '🌍 Tip: Sta je ooit op #1 wereldwijd? Dan haal je Wereldtop!',
+];
+let _mpTipIdx=0,_mpTipInt=null;
+function _mpStartTips(){
+  // Update score box
+  const sb=document.getElementById('mpWaitMyScore');
+  if(sb){const lvlTotal=Math.max(0,(typeof score!=='undefined'?score:0)+(typeof levelScores!=='undefined'?levelScores.reduce((a,v)=>a+v,0):0));sb.textContent=lvlTotal.toLocaleString('nl-NL');}
+  const el=document.getElementById('mpWaitTip');
+  if(!el)return;
+  _mpTipIdx=Math.floor(Math.random()*_mpWaitTips.length);
+  el.textContent=_mpWaitTips[_mpTipIdx];
+  _mpTipInt=setInterval(()=>{
+    if(!el)return;
+    _mpTipIdx=(_mpTipIdx+1)%_mpWaitTips.length;
+    el.style.opacity='0';
+    setTimeout(()=>{el.textContent=_mpWaitTips[_mpTipIdx];el.style.opacity='1';},400);
+  },3500);
+  el.style.transition='opacity 0.4s';
+}
+function _mpStopTips(){clearInterval(_mpTipInt);_mpTipInt=null;}
+// ── END MP WAIT TIPS ──────────────────────────────────────────
 </script>
 
 </body>
