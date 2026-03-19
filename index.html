@@ -487,6 +487,47 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 .mp-wait-row-status{font-size:15px;width:20px;text-align:center}
 .mp-countdown{font-family:'Russo One',sans-serif;font-size:36px;color:#ffd070;text-shadow:0 0 30px rgba(255,215,0,.5);text-align:center;min-width:50px}
 </style>
+
+/* ── ACHIEVEMENTS ── */
+.ach-popup{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);z-index:9999;background:linear-gradient(135deg,rgba(20,12,2,.97),rgba(10,6,1,.99));border:1px solid rgba(255,200,50,.5);border-radius:16px;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 30px rgba(255,180,0,.25);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;min-width:240px;max-width:320px}
+.ach-popup.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ach-popup-icon{font-size:28px;flex-shrink:0}
+.ach-popup-text{display:flex;flex-direction:column}
+.ach-popup-label{font-family:'Russo One',sans-serif;font-size:8px;color:rgba(255,200,50,.7);letter-spacing:2px;margin-bottom:2px}
+.ach-popup-name{font-family:'Russo One',sans-serif;font-size:14px;color:#ffd070}
+.ach-popup-desc{font-family:'Rajdhani',sans-serif;font-size:11px;color:rgba(255,255,255,.6);margin-top:2px}
+
+/* Achievement overlay */
+#ovachievements{background:rgba(5,3,0,.97)}
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 0;overflow-y:auto;max-height:calc(100% - 80px)}
+.ach-card{background:linear-gradient(145deg,rgba(30,18,3,.8),rgba(15,9,1,.9));border:1px solid rgba(180,120,40,.25);border-radius:12px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;transition:border-color .3s}
+.ach-card.unlocked{border-color:rgba(255,200,50,.5);background:linear-gradient(145deg,rgba(40,26,3,.9),rgba(25,15,2,.95))}
+.ach-card.secret{opacity:0.5}
+.ach-card .ach-icon{font-size:28px;filter:grayscale(1);opacity:0.4;transition:filter .3s,opacity .3s}
+.ach-card.unlocked .ach-icon{filter:none;opacity:1}
+.ach-card .ach-name{font-family:'Russo One',sans-serif;font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px}
+.ach-card.unlocked .ach-name{color:#ffd070}
+.ach-card .ach-desc{font-family:'Rajdhani',sans-serif;font-size:10px;color:rgba(255,255,255,.3);line-height:1.3}
+.ach-card.unlocked .ach-desc{color:rgba(255,255,255,.6)}
+.ach-card .ach-date{font-family:'Rajdhani',sans-serif;font-size:9px;color:rgba(255,180,0,.5);margin-top:2px}
+.ach-progress{font-family:'Rajdhani',sans-serif;font-size:10px;color:rgba(255,255,255,.3);margin-top:2px}
+
+/* Achievement popup */
+.ach-popup{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);z-index:9999;background:linear-gradient(135deg,rgba(20,12,2,.97),rgba(10,6,1,.99));border:1px solid rgba(255,200,50,.6);border-radius:16px;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 30px rgba(255,180,0,.3);opacity:0;transition:opacity .4s,transform .4s;pointer-events:none}
+.ach-popup.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ach-popup-ico{font-size:28px;flex-shrink:0}
+.ach-popup-title{font-family:'Russo One',sans-serif;font-size:8px;color:#ffd070;letter-spacing:2px;margin-bottom:3px}
+.ach-popup-name{font-family:'Russo One',sans-serif;font-size:14px;color:#fff}
+/* Achievement grid cards */
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 0;overflow-y:auto;flex:1}
+.ach-card{background:rgba(255,180,0,.08);border:1px solid rgba(255,180,0,.3);border-radius:12px;padding:10px;display:flex;gap:10px;align-items:flex-start}
+.ach-card.locked{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.08);opacity:0.5}
+.ach-card-ico{font-size:24px;flex-shrink:0;margin-top:2px}
+.ach-card-name{font-family:'Russo One',sans-serif;font-size:11px;color:#ffd070;margin-bottom:3px}
+.ach-card.locked .ach-card-name{color:rgba(255,255,255,.4)}
+.ach-card-desc{font-family:'Rajdhani',sans-serif;font-size:10px;color:rgba(255,255,255,.6);line-height:1.3}
+.ach-card-date{font-family:'Rajdhani',sans-serif;font-size:9px;color:rgba(255,180,0,.5);margin-top:4px}
+#ovachievements{background:rgba(5,3,0,.97)}
 </style>
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIkNhcmQgUnVpbnMiLCAic2hvcnRfbmFtZSI6ICJDYXJkIFJ1aW5zIiwgImRlc2NyaXB0aW9uIjogIkJlYXQgdGhlIGRlY2suIFRyaVBlYWtzIHNvbGl0YWlyZSBrYWFydHNwZWwuIiwgInN0YXJ0X3VybCI6ICIuLyIsICJkaXNwbGF5IjogImZ1bGxzY3JlZW4iLCAib3JpZW50YXRpb24iOiAibGFuZHNjYXBlIiwgImJhY2tncm91bmRfY29sb3IiOiAiIzA1MDUxYSIsICJ0aGVtZV9jb2xvciI6ICIjMDUwNTFhIiwgImljb25zIjogW119">
 <meta name="theme-color" content="#05051a">
@@ -521,13 +562,14 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
       <div id="lt">RUINS</div>
       <div id="menu-divider"></div>
       <div id="menu-slogan">Beat the deck.</div>
-      <div id="menu-version">v1.2.6</div>
+      <div id="menu-version">v1.2.7</div>
     </div>
   </div>
   <div id="mright">
     <button class="mbtn pri" onclick="showModeSelect()"><div class="bstone"><span class="bico">🚀</span><span class="btxt">START GAME</span><span class="barrow">›</span></div></button>
     <button class="mbtn" onclick="showOv('levels')"><div class="bstone"><span class="bico">🏛</span><span class="btxt">LEVEL KIEZEN</span><span class="barrow">›</span></div></button>
     <button class="mbtn" onclick="showOv('highscores');buildHS()"><div class="bstone"><span class="bico">🏆</span><span class="btxt">HIGHSCORES</span><span class="barrow">›</span></div></button>
+    <button class="mbtn" onclick="openAchievements()"><div class="bstone"><span class="bico">🏅</span><span class="btxt">ACHIEVEMENTS</span><span class="barrow">›</span></div></button>
     <button class="mbtn" onclick="showOv('howto')"><div class="bstone"><span class="bico">📖</span><span class="btxt">HOE TE SPELEN</span><span class="barrow">›</span></div></button>
     <button class="mbtn" onclick="showOv('settings')"><div class="bstone"><span class="bico">⚙️</span><span class="btxt">INSTELLINGEN</span><span class="barrow">›</span></div></button>
   </div>
@@ -655,6 +697,15 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
     <div class="hslist" id="hslist"></div>
   </div>
   <button class="backbtn" onclick="hideOv('highscores')">← TERUG</button>
+</div>
+
+<div id="ovachievements" class="ovp">
+  <div class="spanel" style="width:100%;max-width:480px;height:100%;display:flex;flex-direction:column">
+    <div class="ptitle">— ACHIEVEMENTS —</div>
+    <div id="ach-stats" style="text-align:center;font-family:'Rajdhani',sans-serif;font-size:12px;color:rgba(255,200,50,.6);margin-bottom:8px"></div>
+    <div class="ach-grid" id="ach-grid"></div>
+  </div>
+  <button class="backbtn" onclick="hideOv('achievements')">← TERUG</button>
 </div>
 <div id="ovsettings" class="ovp">
   <div class="spanel" style="min-width:320px">
@@ -1287,7 +1338,7 @@ function drawCard(){sfxDraw();
       checkDeadlock();
     },310);
   } else {
-    discard=drawPile.pop();combo=0;bonusDiscard=null;renderHUD(true);
+    discard=drawPile.pop();combo=0;achOnTrek();bonusDiscard=null;renderHUD(true);
     checkDeadlock();
   }
 }
@@ -1318,6 +1369,7 @@ function clickPyr(pi,row,col){
 
 function doPlay(card,el,target){sfxCard();
   combo++;
+  achOnCombo(combo);
   const pts=getBasis()*combo;  // basis(level) × combo-positie
   score+=pts;
   if(target==='main')discard={rank:card.rank,suit:card.suit};
@@ -1345,7 +1397,7 @@ function wrongEl(el){sfxWrong();
   // Particle burst at discard position
   const dc=document.getElementById('dcard');
   if(dc){const r=dc.getBoundingClientRect();comboResetBurst(r.left+r.width/2,r.top+r.height/2);}
-  score=Math.max(0,score-pen);combo=0;renderHUD();frozen=true;
+  score=Math.max(0,score-pen);combo=0;achOnFout();renderHUD();frozen=true;
   if(el){const r=el.getBoundingClientRect();scorePop(-pen,r.left+r.width/2,r.top+r.height/2,true);el.classList.add('wrong');setTimeout(()=>{el.classList.remove('wrong');frozen=false;},250);}
   else frozen=false;
 }
@@ -1420,7 +1472,7 @@ function checkExposed(){
   if(pyrGone(2,1,0)&&pyrGone(2,1,1)) tryReveal(2,0,0);
 }
 
-function checkPyrBonus(pi){if(pyr[pi].every(r=>r.every(c=>!c||c.removed))){try{sfxPyramid();}catch(e){}try{pulseTower(pi);}catch(e){}try{fireworkBurst(pi);}catch(e){}const b=getBasis()*15;score+=b;renderHUD();
+function checkPyrBonus(pi){if(pyr[pi].every(r=>r.every(c=>!c||c.removed))){try{sfxPyramid();}catch(e){}try{pulseTower(pi);}catch(e){}try{fireworkBurst(pi);}catch(e){}const b=getBasis()*15;score+=b;achOnPyrLeeg(currentLevel,pi);renderHUD();
   // Big score pop boven de piramide
   try{
     const scene=document.getElementById('scene');
@@ -1725,7 +1777,7 @@ function endLevel(win){
   const neverOpened=drawPile.length; // kaarten die nooit getrokken zijn
   const cb=neverOpened*b*3;          // altijd tellen, ook bij verlies
   const pb=0; // piramide bonus zit al live in score
-  const levelTotal=Math.max(0,score+tb+cb);
+  if(win){achOnWin(currentLevel,timer,newTotal);}else{achOnGameOver();}const levelTotal=Math.max(0,score+tb+cb);
   const prevTotal=levelScores.reduce((a,v)=>a+v,0);
   levelScores[currentLevel]=levelTotal;
   const newTotal=levelScores.reduce((a,v)=>a+v,0);
@@ -2421,6 +2473,15 @@ function _updateComboGlow(combo){
 }
 
 function _updateComboFx(combo){
+  // Schaal de comboteller mee met combo hoogte
+  const el=document.getElementById('cval');
+  if(el){
+    const base=26;
+    const scale=combo>=20?2.2:combo>=15?1.9:combo>=10?1.65:combo>=5?1.3:1;
+    el.style.fontSize=Math.round(base*scale)+'px';
+    el.style.transition='font-size 0.2s cubic-bezier(0.34,1.56,0.64,1)';
+    if(combo===0){el.style.fontSize=base+'px';}
+  }
   if(window._setPillarCombo) window._setPillarCombo(combo);
   _updateComboGlow(combo);
   _updateComboAmbient(combo);
@@ -4592,6 +4653,175 @@ function aToast(msg){
   el.textContent=msg;el.style.opacity='1';
   clearTimeout(_aToastT);_aToastT=setTimeout(()=>el.style.opacity='0',2500);
 }
+
+// ── ACHIEVEMENTS ─────────────────────────────────────────────
+const ACH_DEFS = [
+  // id, emoji, naam, beschrijving, geheim
+  {id:'pyromaan',    e:'🔥', n:'Pyromaan',        d:'Bereik een combo van 20 of hoger in 1 level',              secret:false},
+  {id:'speedster',   e:'⚡', n:'Snelheidsduivel',  d:'Speel een level uit binnen 30 seconden',                   secret:false},
+  {id:'waarzegger',  e:'🃏', n:'Waarzegger',       d:'Speel 15 kaarten op rij zonder fout of trekken',           secret:false},
+  {id:'gladiator',   e:'💎', n:'Gladiator',        d:'Speel een level uit zonder 1 fout te maken',               secret:false},
+  {id:'sharp',       e:'🎯', n:'Scherpschutter',   d:'Win 5 levels op rij zonder game over',                     secret:false},
+  {id:'ontdekker',   e:'🌱', n:'Ontdekker',        d:'Bereik level 10 voor het eerst',                           secret:false},
+  {id:'archeoloog',  e:'🏛', n:'Archeoloog',       d:'Leeg alle 3 piramides in level 1, 2 én 3',                 secret:false},
+  {id:'meester',     e:'👑', n:'Meester',           d:'Speel alle 10 levels in 1 sessie zonder game over',        secret:false},
+  {id:'doorzetter1', e:'💀', n:'Doorzetter I',     d:'Speel 100 potjes totaal',                                  secret:false},
+  {id:'doorzetter2', e:'💀', n:'Doorzetter II',    d:'Speel 250 potjes totaal',                                  secret:false},
+  {id:'doorzetter3', e:'💀', n:'Doorzetter III',   d:'Speel 500 potjes totaal',                                  secret:false},
+  {id:'wereldtop',   e:'🌍', n:'Wereldtop',        d:'Sta op #1 in de wereldwijde highscore',                    secret:false},
+  {id:'legenda',     e:'🔮', n:'Legenda',           d:'Bereik een totaalscore van 13 miljoen',                    secret:false},
+  {id:'pechvogel',   e:'😈', n:'Pechvogel',        d:'???',                                                      secret:true},
+  {id:'gokker',      e:'🎰', n:'Gokker',            d:'???',                                                      secret:true},
+];
+
+// Tracking state (reset per level)
+let _ach = {
+  combo: 0,          // hoogste combo dit level
+  fouten: 0,         // fouten dit level
+  getrokken: 0,      // keer getrokken dit level
+  rij: 0,            // huidige rij zonder fout/trekken
+  tijdOver: 0,       // tijd over bij winst
+  pyrLeeg: {},       // welke piramides leeg per level: {1:[0,1,2], 2:...}
+  sessieWins: 0,     // wins op rij deze sessie zonder game over
+  winsOpRij: 0,      // wins op rij voor scherpschutter
+  sessieFail: false, // game over gehad deze sessie
+};
+
+function _achLoad(){
+  try{return JSON.parse(localStorage.getItem('cr_ach')||'{}');}catch(e){return {};}
+}
+function _achSave(data){
+  try{localStorage.setItem('cr_ach',JSON.stringify(data));}catch(e){}
+}
+function _achGetStats(){
+  try{return JSON.parse(localStorage.getItem('cr_ach_stats')||'{}');}catch(e){return {};}
+}
+function _achSaveStats(s){
+  try{localStorage.setItem('cr_ach_stats',JSON.stringify(s));}catch(e){}
+}
+
+function unlockAch(id){
+  const data=_achLoad();
+  if(data[id]) return; // al behaald
+  data[id]=Date.now();
+  _achSave(data);
+  const def=ACH_DEFS.find(a=>a.id===id);
+  if(!def) return;
+  // Popup tonen
+  const popup=document.createElement('div');
+  popup.className='ach-popup';
+  popup.innerHTML=`<div class="ach-popup-ico">${def.e}</div><div><div class="ach-popup-title">ACHIEVEMENT UNLOCKED</div><div class="ach-popup-name">${def.n}</div></div>`;
+  document.body.appendChild(popup);
+  setTimeout(()=>popup.classList.add('show'),50);
+  setTimeout(()=>{popup.classList.remove('show');setTimeout(()=>popup.remove(),500);},3500);
+}
+
+function achResetLevel(){
+  _ach.combo=0;_ach.fouten=0;_ach.getrokken=0;_ach.rij=0;_ach.tijdOver=0;
+}
+
+function achOnCombo(c){
+  if(c>_ach.combo) _ach.combo=c;
+  _ach.rij++;
+  if(_ach.combo>=20) unlockAch('pyromaan');
+  if(_ach.rij>=15) unlockAch('waarzegger');
+}
+
+function achOnFout(){
+  _ach.fouten++;
+  _ach.rij=0;
+}
+
+function achOnTrek(){
+  _ach.getrokken++;
+  _ach.rij=0;
+  // Gokker: trekstapel helemaal leeg
+  if(drawPile.length===0) unlockAch('gokker');
+}
+
+function achOnPyrLeeg(lvl, pi){
+  if(!_ach.pyrLeeg[lvl]) _ach.pyrLeeg[lvl]=[];
+  if(!_ach.pyrLeeg[lvl].includes(pi)) _ach.pyrLeeg[lvl].push(pi);
+  // Archeoloog: alle 3 piramides leeg in level 1, 2 én 3
+  if([1,2,3].every(l=>_ach.pyrLeeg[l]&&_ach.pyrLeeg[l].length===3)) unlockAch('archeoloog');
+}
+
+function achOnWin(lvl, timeLeft, totalScore){
+  _ach.tijdOver=timeLeft;
+  _ach.winsOpRij++;
+  // Snelheidsduivel
+  const elapsed=LEVEL_TIME[lvl]-timeLeft;
+  if(elapsed<=30) unlockAch('speedster');
+  // Gladiator
+  if(_ach.fouten===0) unlockAch('gladiator');
+  // Scherpschutter
+  if(_ach.winsOpRij>=5) unlockAch('sharp');
+  // Ontdekker
+  if(lvl>=10) unlockAch('ontdekker');
+  // Meester
+  if(lvl===10&&!_ach.sessieFail) unlockAch('meester');
+  // Legenda
+  if(totalScore>=13000000) unlockAch('legenda');
+  // Pechvogel: 10+ fouten maar toch gewonnen
+  if(_ach.fouten>=10) unlockAch('pechvogel');
+}
+
+function achOnGameOver(){
+  _ach.sessieFail=true;
+  _ach.winsOpRij=0;
+  // Doorzetter tellen
+  const stats=_achGetStats();
+  stats.games=(stats.games||0)+1;
+  _achSaveStats(stats);
+  if(stats.games>=100) unlockAch('doorzetter1');
+  if(stats.games>=250) unlockAch('doorzetter2');
+  if(stats.games>=500) unlockAch('doorzetter3');
+}
+
+function achOnGameStart(){
+  // Tel ook gewonnen games mee voor doorzetter
+  const stats=_achGetStats();
+  stats.games=(stats.games||0)+1;
+  _achSaveStats(stats);
+  if(stats.games>=100) unlockAch('doorzetter1');
+  if(stats.games>=250) unlockAch('doorzetter2');
+  if(stats.games>=500) unlockAch('doorzetter3');
+  achResetLevel();
+}
+
+function achCheckWereldtop(rank){
+  if(rank===1) unlockAch('wereldtop');
+}
+
+function openAchievements(){
+  const data=_achLoad();
+  const stats=_achGetStats();
+  const unlocked=Object.keys(data).length;
+  const total=ACH_DEFS.length;
+  // Stats header
+  const statsEl=document.getElementById('ach-stats');
+  if(statsEl) statsEl.textContent=`${unlocked} / ${total} behaald  •  ${stats.games||0} potjes gespeeld`;
+  // Grid vullen
+  const grid=document.getElementById('ach-grid');
+  if(!grid){showOv('achievements');return;}
+  grid.innerHTML='';
+  ACH_DEFS.forEach(def=>{
+    const done=!!data[def.id];
+    const card=document.createElement('div');
+    card.className='ach-card'+(done?'':' locked');
+    const showSecret=def.secret&&!done;
+    card.innerHTML=`
+      <div class="ach-card-ico">${showSecret?'❓':def.e}</div>
+      <div class="ach-card-info">
+        <div class="ach-card-name">${showSecret?'???':def.n}</div>
+        <div class="ach-card-desc">${showSecret?'Geheim achievement':def.d}</div>
+        ${done?`<div class="ach-card-date">${new Date(data[def.id]).toLocaleDateString('nl-NL')}</div>`:''}
+      </div>`;
+    grid.appendChild(card);
+  });
+  showOv('achievements');
+}
+// ── END ACHIEVEMENTS ──────────────────────────────────────────
 </script>
 
 </body>
