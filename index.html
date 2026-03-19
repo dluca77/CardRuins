@@ -230,18 +230,18 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 @keyframes sp{0%{opacity:0;transform:translate(-50%,-50%) scale(0.4)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}30%{transform:translate(-50%,-70%) scale(1)}70%{opacity:1;transform:translate(-50%,-180%) scale(1)}100%{opacity:0;transform:translate(-50%,-280%) scale(0.7)}}
 #toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.92);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.85);font-family:'Russo One',sans-serif;font-size:12px;padding:7px 20px;border-radius:20px;z-index:400;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
 #toast.show{opacity:1}
-#ovres{position:fixed;inset:0;z-index:200;background:rgba(5,2,0,.9);backdrop-filter:blur(8px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#ovres{position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,rgba(10,5,0,.97) 0%,rgba(25,12,0,.98) 100%);backdrop-filter:blur(16px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
 #ovres.show{display:flex}
 .rtitle{font-size:46px;line-height:1;text-align:center}
-.rtitle.win{color:#60d0ff;text-shadow:0 0 30px rgba(0,180,255,.6)}
+.rtitle.win{color:#ffd070;text-shadow:0 0 30px rgba(255,200,60,.6)}
 .rtitle.lose{color:#ff5040;text-shadow:0 0 30px rgba(255,60,40,.6)}
-.rscore{font-size:60px;color:#ffd700;text-shadow:0 0 36px rgba(255,215,0,.5);animation:pi .4s cubic-bezier(.34,1.56,.64,1);text-align:center;line-height:1.2}
+.rscore{font-size:60px;color:#ffd070;text-shadow:0 0 40px rgba(255,200,60,.7),0 0 80px rgba(255,160,30,.3);animation:pi .4s cubic-bezier(.34,1.56,.64,1);text-align:center;line-height:1.2}
 @keyframes pi{from{transform:scale(.3);opacity:0}
 #lvlscr{font-size:60px;color:#ffd700;text-shadow:0 0 36px rgba(255,215,0,.5);}to{transform:scale(1);opacity:1}}
 .rbkdown{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-.rbk{display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 16px}
-.rbkl{font-size:8px;letter-spacing:2px;color:rgba(255,255,255,.4)}
-.rbkv{font-size:20px;color:#60c0ff}
+.rbk{display:flex;flex-direction:column;align-items:center;background:linear-gradient(160deg,rgba(30,15,0,.85) 0%,rgba(20,10,0,.9) 100%);border:1px solid rgba(220,150,40,.3);border-radius:12px;padding:8px 18px;box-shadow:0 4px 16px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,180,50,.1)}
+.rbkl{font-size:8px;letter-spacing:2px;color:rgba(255,180,60,.6)}
+.rbkv{font-size:20px;color:#ffd070}
 .rbtns{display:flex;gap:12px;margin-top:4px}
 .rbtn{font-family:'Russo One',sans-serif;font-size:14px;padding:12px 32px;border-radius:28px;cursor:pointer;letter-spacing:2px;transition:all .2s;position:relative;overflow:hidden}
 
@@ -1419,7 +1419,7 @@ function checkExposed(){
   if(pyrGone(2,1,0)&&pyrGone(2,1,1)) tryReveal(2,0,0);
 }
 
-function checkPyrBonus(pi){sfxPyramid();if(pyr[pi].every(r=>r.every(c=>c.removed))){pulseTower(pi);fireworkBurst(pi);const b=getBasis()*15;toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'));}}
+function checkPyrBonus(pi){sfxPyramid();if(pyr[pi].every(r=>r.every(c=>c.removed))){pulseTower(pi);fireworkBurst(pi);const b=getBasis()*15;score+=b;renderHUD();toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'));}}
 function checkClear(){if(openCards.every(c=>c.removed)&&pyr.every(p=>p.every(r=>r.every(c=>c.removed))))endLevel(true);}
 
 function refreshPyr(pi,row,col){
@@ -1708,9 +1708,8 @@ function endLevel(win){
   const tb=win ? Math.round(timer*b*0.5) : 0;
   const neverOpened=drawPile.length; // kaarten die nooit getrokken zijn
   const cb=neverOpened*b*3;          // altijd tellen, ook bij verlies
-  const clearedPyrs=pyr.filter(p=>p.every(r=>r.every(c=>c.removed))).length;
-  const pb=clearedPyrs*b*15;         // piramide bonus
-  const levelTotal=Math.max(0,score+tb+cb+pb);
+  const pb=0; // piramide bonus zit al live in score
+  const levelTotal=Math.max(0,score+tb+cb);
   const prevTotal=levelScores.reduce((a,v)=>a+v,0);
   levelScores[currentLevel]=levelTotal;
   const newTotal=levelScores.reduce((a,v)=>a+v,0);
@@ -1749,9 +1748,9 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
   t.textContent='LEVEL '+currentLevel;
   t.className='rtitle '+(win?'win':'lose');
 
-  const rows=[['🎮 KAARTSCORE',gp],['⏱ TIJDBONUS',tb],['🔒 ONGEOPEND',cb],['🏛 PIRAMIDES',pb]];
+  const rows=[['🎮 KAARTSCORE',gp],['⏱ TIJDBONUS',tb],['🔒 ONGEOPEND',cb]];
   document.getElementById('rbkdown').innerHTML=rows.map(([l,v])=>
-    `<div class="rbk"><span class="rbkl">${l}</span><span class="rbkv" style="color:${v>0?'#60c0ff':'rgba(255,255,255,0.3)'}">+${v.toLocaleString('nl-NL')}</span></div>`
+    `<div class="rbk"><span class="rbkl">${l}</span><span class="rbkv" style="color:${v>0?'#ffd070':'rgba(255,180,60,0.3)'}">+${v.toLocaleString('nl-NL')}</span></div>`
   ).join('');
 
   // Big yellow numbers count up from prevTotal to newTotal
