@@ -1345,7 +1345,7 @@ function clickOpen(idx){
   const card=openCards[idx];if(!card||card.removed)return;
   const el=document.querySelector(`[data-oidx="${idx}"]`);
   if(canPlay(card,discard)){doPlay(card,el,'main');card.removed=true;}
-  else if(canPlay(card,bonusDiscard)){doPlay(card,el,'bonus');card.removed=true;}
+  else if(canPlay(card,bonusDiscard)){doPlay(card,el,'bonus');card.removed=true;if(typeof _ach!=='undefined')_ach.bonusGebruikt=true;}
   else{wrongEl(el);return;}
   afterPlay();
 }
@@ -3571,7 +3571,7 @@ function _mpSubscribe(){
           _mpShowWatchMode();
         } else {
           const deal=JSON.parse(room.deck);
-          await _mpStartWithDeal(deal);
+          await _mpStartWithDeal(deal);if(typeof achOnMpPlayed==='function')achOnMpPlayed();
         }
         return;
       }
@@ -4662,9 +4662,25 @@ const ACH_DEFS=[
   {id:'legenda',    e:'🔮',n:'Legenda',         d:'Bereik een totaalscore van 13 miljoen',                    secret:false},
   {id:'pechvogel',  e:'😈',n:'Pechvogel',      d:'???',                                                      secret:true},
   {id:'gokker',     e:'🎰',n:'Gokker',          d:'???',                                                      secret:true},
+  // Nieuwe achievements
+  {id:'ongenaakbaar', e:'⚔️',n:'Ongenaakbaar',   d:'Win een level zonder de bonuskaart te gebruiken',          secret:false},
+  {id:'tsunami',      e:'🌊',n:'Tsunami',        d:'Speel alle 10 open kaarten weg voordat je 1x trekt',       secret:false},
+  {id:'fokus',        e:'🎯',n:'Fokus',           d:'Win 3 levels op rij zonder een fout te maken',             secret:false},
+  {id:'nachtbraker',  e:'🌙',n:'Nachtbraker',    d:'Win 25 levels totaal',                                      secret:false},
+  {id:'veteraan',     e:'⭐',n:'Veteraan',        d:'Speel 1000 kaarten totaal',                                secret:false},
+  {id:'bouwheer',     e:'🏰',n:'Bouwheer',       d:'Leeg alle piramides in 5 verschillende levels',            secret:false},
+  {id:'geslaagd',     e:'🎓',n:'Geslaagd',       d:'Win alle 10 levels minstens 1x',                           secret:false},
+  {id:'sociaal',      e:'🤝',n:'Sociaal',         d:'Speel je eerste multiplayer potje',                        secret:false},
+  {id:'rivaal',       e:'👊',n:'Rivaal',          d:'Win een multiplayer potje',                                secret:false},
+  {id:'kampioen',     e:'🏆',n:'Kampioen',        d:'Win 3 multiplayer potjes op rij',                          secret:false},
+  {id:'marathonloper',e:'❓',n:'Marathonloper',   d:'???',                                                      secret:true},
+  {id:'trekverslaafd',e:'❓',n:'Trekverslaafd',   d:'???',                                                      secret:true},
+  {id:'comeback',     e:'❓',n:'Comeback',        d:'???',                                                      secret:true},
+  {id:'geluksvogel',  e:'❓',n:'Geluksvogel',     d:'???',                                                      secret:true},
+  {id:'perfectrun',   e:'❓',n:'Perfecte Run',    d:'???',                                                      secret:true},
 ];
 
-let _ach={combo:0,fouten:0,getrokken:0,rij:0,winsOpRij:0,sessieFail:false,pyrLeeg:{}};
+let _ach={combo:0,fouten:0,getrokken:0,rij:0,winsOpRij:0,sessieFail:false,pyrLeeg:{},bonusGebruikt:false,openKaartenVoorTrek:0,trekDitLevel:0,foutloosWins:0,mpWinsOpRij:0,sessionStart:Date.now(),kaartTeller:0,pyrLeegLevels:new Set(),levelGewonnen:new Set(),eersteSpel:false};
 
 function _achLoad(){try{return JSON.parse(localStorage.getItem('cr_ach')||'{}');}catch(e){return {};}}
 function _achSave(d){try{localStorage.setItem('cr_ach',JSON.stringify(d));}catch(e){}}
@@ -4686,17 +4702,22 @@ function unlockAch(id){
   setTimeout(()=>{pop.classList.remove('show');setTimeout(()=>pop.remove(),500);},3500);
 }
 
-function achResetLevel(){_ach.combo=0;_ach.fouten=0;_ach.getrokken=0;_ach.rij=0;}
+function achResetLevel(){_ach.combo=0;_ach.fouten=0;_ach.getrokken=0;_ach.rij=0;_ach.bonusGebruikt=false;_ach.openKaartenVoorTrek=0;_ach.trekDitLevel=0;_ach.trekGeweest=false;}
 
 function achOnCombo(c){
   if(c>_ach.combo)_ach.combo=c;
   _ach.rij++;
+  _ach.kaartTeller++;
+  if(!_ach.trekGeweest)_ach.openKaartenVoorTrek++;
   if(_ach.combo>=20)unlockAch('pyromaan');
   if(_ach.rij>=15)unlockAch('waarzegger');
+  // Veteraan
+  const stats=_achStats();stats.kaarten=(stats.kaarten||0)+1;_achSaveStats(stats);
+  if(stats.kaarten>=1000)unlockAch('veteraan');
 }
-function achOnFout(){_ach.fouten++;_ach.rij=0;}
+function achOnFout(){_ach.fouten++;_ach.rij=0;_ach.foutloosWins=0;}
 function achOnTrek(){
-  _ach.rij=0;
+  _ach.rij=0;_ach.trekGeweest=true;_ach.trekDitLevel++;
   if(typeof drawPile!=='undefined'&&drawPile.length===0)unlockAch('gokker');
 }
 function achOnPyrLeeg(lvl,pi){
@@ -4714,6 +4735,33 @@ function achOnWin(lvl,timeLeft,tot){
   if(lvl===10&&!_ach.sessieFail)unlockAch('meester');
   if(tot>=13000000)unlockAch('legenda');
   if(_ach.fouten>=10)unlockAch('pechvogel');
+  // Nieuwe achievements
+  if(!_ach.bonusGebruikt)unlockAch('ongenaakbaar');
+  if(_ach.openKaartenVoorTrek>=10&&!_ach.trekGeweest)unlockAch('tsunami');
+  if(_ach.fouten===0){_ach.foutloosWins=(_ach.foutloosWins||0)+1;if(_ach.foutloosWins>=3)unlockAch('fokus');}else{_ach.foutloosWins=0;}
+  if(timeLeft<=5&&timeLeft>0)unlockAch('comeback');
+  if(_ach.fouten===0&&_ach.trekDitLevel===0)unlockAch('perfectrun');
+  // Progressie stats
+  const stats=_achStats();
+  stats.levelsGewonnen=(stats.levelsGewonnen||0)+1;
+  if(!stats.levelSet)stats.levelSet={};
+  stats.levelSet[lvl]=true;
+  if(!stats.eersteWin){stats.eersteWin=true;unlockAch('geluksvogel');}
+  if(stats.levelsGewonnen>=25)unlockAch('nachtbraker');
+  // Geslaagd: alle 10 levels gewonnen
+  if(Object.keys(stats.levelSet).length>=10)unlockAch('geslaagd');
+  // Archeoloog piramides per level bijhouden
+  if(_ach.pyrLeeg[lvl]&&_ach.pyrLeeg[lvl].length===3){
+    if(!stats.pyrLeegLevels)stats.pyrLeegLevels={};
+    stats.pyrLeegLevels[lvl]=true;
+    if(Object.keys(stats.pyrLeegLevels).length>=5)unlockAch('bouwheer');
+  }
+  // Marathonloper
+  const minuten=(Date.now()-_ach.sessionStart)/60000;
+  if(minuten>=30)unlockAch('marathonloper');
+  // Trekverslaafd: 10x getrokken maar toch gewonnen
+  if(_ach.trekDitLevel>=10)unlockAch('trekverslaafd');
+  _achSaveStats(stats);
 }
 function achOnGameOver(){
   _ach.sessieFail=true;_ach.winsOpRij=0;
@@ -4751,6 +4799,20 @@ function openAchievements(){
   showOv('achievements');
 }
 // ── END ACHIEVEMENTS ──────────────────────────────────────────
+
+// MP Achievement hooks
+function achOnMpPlayed(){unlockAch('sociaal');}
+function achOnMpWin(){
+  const stats=_achStats();
+  stats.mpWins=(stats.mpWins||0)+1;
+  stats.mpWinsOpRij=(stats.mpWinsOpRij||0)+1;
+  unlockAch('rivaal');
+  if(stats.mpWinsOpRij>=3)unlockAch('kampioen');
+  _achSaveStats(stats);
+}
+function achOnMpLose(){
+  const stats=_achStats();stats.mpWinsOpRij=0;_achSaveStats(stats);
+}
 </script>
 
 </body>
