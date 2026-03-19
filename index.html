@@ -520,7 +520,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
       <div id="lt">RUINS</div>
       <div id="menu-divider"></div>
       <div id="menu-slogan">Beat the deck.</div>
-      <div id="menu-version">v1.2.5</div>
+      <div id="menu-version">v1.2.6</div>
     </div>
   </div>
   <div id="mright">
@@ -1419,7 +1419,7 @@ function checkExposed(){
   if(pyrGone(2,1,0)&&pyrGone(2,1,1)) tryReveal(2,0,0);
 }
 
-function checkPyrBonus(pi){sfxPyramid();if(pyr[pi].every(r=>r.every(c=>c.removed))){pulseTower(pi);fireworkBurst(pi);const b=getBasis()*15;score+=b;renderHUD();toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'));}}
+function checkPyrBonus(pi){if(pyr[pi].every(r=>r.every(c=>!c||c.removed))){try{sfxPyramid();}catch(e){}try{pulseTower(pi);}catch(e){}try{fireworkBurst(pi);}catch(e){}const b=getBasis()*15;score+=b;renderHUD();toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'));}}
 function checkClear(){if(openCards.every(c=>c.removed)&&pyr.every(p=>p.every(r=>r.every(c=>c.removed))))endLevel(true);}
 
 function refreshPyr(pi,row,col){
