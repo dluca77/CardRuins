@@ -492,11 +492,11 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 .mp-countdown{font-family:'Russo One',sans-serif;font-size:36px;color:#ffd070;text-shadow:0 0 30px rgba(255,215,0,.5);text-align:center;min-width:50px}
 
 /* ── ACHIEVEMENTS ── */
-.ach-popup{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);z-index:9999;background:linear-gradient(135deg,rgba(20,12,2,.97),rgba(10,6,1,.99));border:1px solid rgba(255,200,50,.6);border-radius:16px;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 30px rgba(255,180,0,.3);opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;min-width:240px}
-.ach-popup.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.ach-popup-ico{font-size:28px;flex-shrink:0}
-.ach-popup-title{font-family:'Russo One',sans-serif;font-size:8px;color:#ffd070;letter-spacing:2px;margin-bottom:3px}
-.ach-popup-name{font-family:'Russo One',sans-serif;font-size:14px;color:#fff}
+.ach-popup{position:fixed;top:16px;right:16px;z-index:9999;background:linear-gradient(135deg,rgba(20,12,2,.65),rgba(10,6,1,.68));border:1px solid rgba(255,200,50,.35);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.4);opacity:0;transform:translateX(110%);transition:opacity .35s,transform .35s cubic-bezier(.22,.8,.44,1);pointer-events:none;max-width:220px;backdrop-filter:blur(4px)}
+.ach-popup.show{opacity:.65;transform:translateX(0)}
+.ach-popup-ico{font-size:22px;flex-shrink:0}
+.ach-popup-title{font-family:'Russo One',sans-serif;font-size:7px;color:#ffd070;letter-spacing:2px;margin-bottom:2px}
+.ach-popup-name{font-family:'Russo One',sans-serif;font-size:12px;color:rgba(255,255,255,.9)}
 #ovachievements{background:rgba(5,3,0,.97)}
 .ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 0;overflow-y:auto;flex:1}
 .ach-card{background:rgba(255,180,0,.08);border:1px solid rgba(255,180,0,.3);border-radius:12px;padding:10px;display:flex;gap:10px;align-items:flex-start}
@@ -4731,7 +4731,7 @@ function unlockAch(id){
   pop.innerHTML='<div class="ach-popup-ico">'+def.e+'</div><div><div class="ach-popup-title">ACHIEVEMENT UNLOCKED</div><div class="ach-popup-name">'+def.n+'</div></div>';
   document.body.appendChild(pop);
   setTimeout(()=>pop.classList.add('show'),50);
-  setTimeout(()=>{pop.classList.remove('show');setTimeout(()=>pop.remove(),500);},3500);
+  setTimeout(()=>{pop.classList.remove('show');setTimeout(()=>pop.remove(),400);},2800);
 }
 
 function achResetLevel(){_ach.combo=0;_ach.fouten=0;_ach.getrokken=0;_ach.rij=0;_ach.bonusGebruikt=false;_ach.openKaartenVoorTrek=0;_ach.trekDitLevel=0;_ach.trekGeweest=false;}
