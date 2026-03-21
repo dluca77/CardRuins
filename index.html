@@ -1062,7 +1062,7 @@ function generateDeal(level){
     remaining=pool.filter(c=>!chainSet.has(c.rank+c.suit));
     const chainSlice=chain.slice(0,Math.min(chain.length,chainMaxSlice));
     const fillers=remaining.splice(0,10-chainSlice.length);
-    open10=shuffle([...chainSlice,...fillers]).slice(0,10);
+    open10=[...chainSlice,...shuffle(fillers)].slice(0,10);
   } else {
     remaining=[...pool];
     open10=remaining.splice(0,10);
