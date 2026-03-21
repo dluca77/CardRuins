@@ -544,7 +544,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
       <div id="lt">RUINS</div>
       <div id="menu-divider"></div>
       <div id="menu-slogan">Beat the deck.</div>
-      <div id="menu-version">v1.2.8</div>
+      <div id="menu-version">v1.2.9</div>
     </div>
   </div>
   <div id="mright">
@@ -1118,10 +1118,76 @@ function buildChain(start,pool,maxLen){
   }return chain;
 }
 
+// ── DEAL POOL SYSTEEM ──────────────────────────────────────────
+// Genereert 100 gevalideerde (altijd oplosbare) deals per level bij opstarten.
+// initLevel() en multiplayer trekken altijd uit deze pool via getRandomDeal().
+
+const _dealPool={};        // {1:[...deals], 2:[...deals], ...}
+let _dealPoolReady=false;  // wordt true zodra alle 1000 deals klaar zijn
+
+function _canSolveDeal(sd,open10,pyrCards,drawArr){
+  // Backtracking solver — controleert of een deal theoretisch oplosbaar is.
+  // Gebruikt bitmasks voor snelheid: openMask (10 bits), pyrMask (18 bits).
+  const pyrStruct=[];let ci=0;
+  for(let pi=0;pi<3;pi++){const p=[];for(let row=0;row<3;row++){const r=[];for(let col=0;col<=row;col++){r.push({...pyrCards[ci],idx:ci});ci++;}p.push(r);}pyrStruct.push(p);}
+  const seen=new Set();
+  function isExp(pm,pi,row){return row===0||pyrStruct[pi][row-1].every(c=>pm&(1<<c.idx));}
+  function solve(om,pm,di,disc,bonus,depth){
+    if(depth>300)return false;
+    const key=om+'|'+pm+'|'+di+'|'+disc.rank+'|'+(bonus?bonus.rank:'X');
+    if(seen.has(key))return false;seen.add(key);
+    if(pm===(1<<18)-1&&om===(1<<10)-1)return true;
+    const moves=[];
+    for(let i=0;i<10;i++){if(om&(1<<i))continue;const c=open10[i];if(canPlay(c,disc))moves.push({t:'o',i,tgt:'m'});else if(bonus&&canPlay(c,bonus))moves.push({t:'o',i,tgt:'b'});}
+    for(let pi=0;pi<3;pi++)for(let row=0;row<3;row++)for(let col=0;col<pyrStruct[pi][row].length;col++){const c=pyrStruct[pi][row][col];if(pm&(1<<c.idx)||!isExp(pm,pi,row))continue;if(canPlay(c,disc))moves.push({t:'p',c,tgt:'m'});else if(bonus&&canPlay(c,bonus))moves.push({t:'p',c,tgt:'b'});}
+    if(di<drawArr.length)moves.push({t:'d'});
+    for(const m of moves){
+      if(m.t==='d'){if(solve(om,pm,di+1,drawArr[di],null,depth+1))return true;}
+      else if(m.t==='o'){const c=open10[m.i];if(solve(om|(1<<m.i),pm,di,m.tgt==='m'?c:disc,m.tgt==='b'?c:bonus,depth+1))return true;}
+      else{const c=m.c;if(solve(om,pm|(1<<c.idx),di,m.tgt==='m'?c:disc,m.tgt==='b'?c:bonus,depth+1))return true;}
+    }
+    return false;
+  }
+  return solve(0,0,0,sd,null,0);
+}
+
+function _buildDealPool(){
+  // Genereert 100 gevalideerde deals per level (1-10) op de achtergrond.
+  // Gebruikt setTimeout(0) per level zodat de UI niet blokkeert.
+  const POOL_SIZE=100;
+  let level=1;
+  function doLevel(){
+    _dealPool[level]=[];
+    let attempts=0;
+    while(_dealPool[level].length<POOL_SIZE&&attempts<2000){
+      attempts++;
+      const d=generateDeal(level);
+      if(_canSolveDeal(d.startDiscard,d.open10,d.pyrCards,d.drawArr)){
+        _dealPool[level].push(d);
+      }
+    }
+    level++;
+    if(level<=10) setTimeout(doLevel,0);
+    else _dealPoolReady=true;
+  }
+  setTimeout(doLevel,0);
+}
+
+function getRandomDeal(level){
+  // Geeft een random gevalideerde deal terug uit de pool.
+  // Val terug op generateDeal() als de pool nog niet klaar is (mag niet voorkomen).
+  if(_dealPool[level]&&_dealPool[level].length>0){
+    const idx=Math.floor(Math.random()*_dealPool[level].length);
+    return _dealPool[level][idx];
+  }
+  return generateDeal(level); // fallback
+}
+// ── EINDE DEAL POOL ────────────────────────────────────────────
+
 function startGame(level){hideOv('levels');currentLevel=level;showScreen('sgame');initLevel(level);document.getElementById('pillarL').style.display='block';document.getElementById('pillarR').style.display='block';}
 
 async function initLevel(level){
-  const{startDiscard,open10,pyrCards,drawArr}=generateDeal(level);
+  const{startDiscard,open10,pyrCards,drawArr}=getRandomDeal(level);
   discard=startDiscard;bonusDiscard=null;drawPile=drawArr;
   openCards=open10.map((c,i)=>({...c,removed:false,faceUp:true,idx:i}));
   pyr=[];
@@ -3309,11 +3375,14 @@ async function mpCreateRoom(){
   const createBtn=document.querySelector('[onclick="mpCreateRoom()"]');
   if(createBtn){createBtn.disabled=true;createBtn.textContent='⏳ Aanmaken...';}
 
+  // Wacht op deal pool als die nog niet klaar is (duurt max ~250ms)
+  await new Promise(resolve=>_mpWaitForPool(resolve));
+
   try{
     const code=_mpGenCode();
     // Genereer alle 10 levels tegelijk zodat alle spelers dezelfde kaarten krijgen
     const allDeals=[];
-    for(let l=1;l<=10;l++) allDeals.push(generateDeal(l));
+    for(let l=1;l<=10;l++) allDeals.push(getRandomDeal(l));
     _mp._deals=allDeals;
     const deckData={deals:allDeals,maxPlayers:_mp.maxPlayers,isPrivate:_mp.isPrivate};
 
@@ -4193,7 +4262,7 @@ async function submitOnlineScore(score){
     <div style="background:rgba(10,4,0,.98);border-bottom:1px solid rgba(200,140,40,.2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5">
       <div>
         <div style="font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:3px;color:#ffd070">⚔️ ADMIN</div>
-        <div style="font-size:10px;color:rgba(255,100,80,.7);letter-spacing:2px">CARD RUINS v1.2.5</div>
+        <div style="font-size:10px;color:rgba(255,100,80,.7);letter-spacing:2px">CARD RUINS v1.2.9</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span id="aLastRefresh" style="font-size:10px;color:rgba(255,255,255,.25)"></span>
@@ -4877,6 +4946,21 @@ function _mpStartTips(){
 }
 function _mpStopTips(){clearInterval(_mpTipInt);_mpTipInt=null;}
 // ── END MP WAIT TIPS ──────────────────────────────────────────
+
+// ── DEAL POOL INITIALISATIE ────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{ _buildDealPool(); });
+
+// Bewaakt de MP "Aanmaken" knop: wacht tot pool klaar is (duurt ~250ms).
+function _mpWaitForPool(cb){
+  if(_dealPoolReady){cb();return;}
+  let waited=0;
+  const iv=setInterval(()=>{
+    waited+=100;
+    if(_dealPoolReady){clearInterval(iv);cb();}
+    else if(waited>8000){clearInterval(iv);cb();} // fallback na 8s
+  },100);
+}
+// ── EINDE POOL INITIALISATIE ───────────────────────────────────
 </script>
 
 </body>
