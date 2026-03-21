@@ -1929,29 +1929,30 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
   let d=prevTotal;
   const step=Math.max(1000,Math.ceil((newTotal-prevTotal)/60));
 
-  // Alvast Supabase checken tijdens het tellen
+  // Level 10: direct naam modal + check parallel
   const thisLevel=currentLevel;
-  let top4Promise=null;
+  let _hsNameResolve=null;
+  let _hsNamePromise=null;
   if(thisLevel>=10){
-    top4Promise=_supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4)
+    // Start naam modal DIRECT — niet wachten op Supabase
+    _hsNamePromise=new Promise(resolve=>{ _hsNameResolve=resolve; });
+    // Toon naam modal meteen
+    setTimeout(()=>_showNameModalForHS(_hsNameResolve), 400);
+    // Check Supabase parallel
+    _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4)
       .then(({data})=>{
         const scores=(data||[]).map(r=>r.score);
-        return scores.length<4||newTotal>scores[scores.length-1];
-      }).catch(()=>false);
+        const inTop4=scores.length<4||newTotal>scores[scores.length-1];
+        if(inTop4&&_hsNamePromise){
+          _hsNamePromise.then(name=>_showHSPopup(newTotal,name));
+        }
+      }).catch(()=>{});
   }
 
   const iv=setInterval(()=>{
     d=Math.min(d+step,newTotal);
     lvlEl.textContent=d.toLocaleString('nl-NL');
-    if(d>=newTotal){
-      clearInterval(iv);
-      if(top4Promise){
-        // Direct popup tonen zodra score klaar is — niet wachten op knopklik
-        top4Promise.then(inTop4=>{
-          if(inTop4) _submitScoreOnResultScreen(newTotal);
-        });
-      }
-    }
+    if(d>=newTotal) clearInterval(iv);
   },28);
 
   const btns=document.getElementById('rbtns');btns.innerHTML='';
@@ -2050,9 +2051,6 @@ async function _showHSPopup(myScore,playerName){
   const board=document.getElementById('hspBoard');
   const rankEl=document.getElementById('hspRank');
   const scoreEl=document.getElementById('hspScore');
-
-  // Korte pauze zodat het resultaatscherm even zichtbaar is
-  await new Promise(r=>setTimeout(r,800));
 
   scoreEl.textContent=myScore.toLocaleString('nl-NL');
   board.innerHTML='';
@@ -3136,6 +3134,32 @@ function _fwAt(cx,cy){
 
 // ── FIREBASE ─────────────────────────────────────────────────
 // ── NAME MODAL ────────────────────────────────────────────────
+// Naam modal die een resolve callback aanroept ipv promise retourneert
+function _showNameModalForHS(resolve){
+  const modal=document.getElementById('nameModal');
+  const input=document.getElementById('nameInput');
+  const confirm=document.getElementById('nameConfirm');
+  const skip=document.getElementById('nameSkip');
+  const lastName=localStorage.getItem('cr_playername')||'';
+  input.value=lastName;
+  modal.classList.add('show');
+  setTimeout(()=>input.focus(),100);
+  function done(val){
+    modal.classList.remove('show');
+    confirm.removeEventListener('click',onConfirm);
+    skip.removeEventListener('click',onSkip);
+    input.removeEventListener('keydown',onKey);
+    if(val&&val.trim()) localStorage.setItem('cr_playername',val.trim().substring(0,20));
+    resolve(val?val.trim().substring(0,20):'');
+  }
+  function onConfirm(){const v=input.value.trim().substring(0,20);if(!v)return;done(v);}
+  function onSkip(){done('');}
+  function onKey(e){if(e.key==='Enter')onConfirm();}
+  confirm.addEventListener('click',onConfirm);
+  skip.addEventListener('click',onSkip);
+  input.addEventListener('keydown',onKey);
+}
+
 function _showNameModal(){
   return new Promise(resolve=>{
     const modal=document.getElementById('nameModal');
