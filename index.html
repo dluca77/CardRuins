@@ -1945,9 +1945,12 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
     lvlEl.textContent=d.toLocaleString('nl-NL');
     if(d>=newTotal){
       clearInterval(iv);
-      if(top4Promise) top4Promise.then(inTop4=>{
-        if(inTop4) _submitScoreOnResultScreen(newTotal);
-      });
+      if(top4Promise){
+        // Direct popup tonen zodra score klaar is — niet wachten op knopklik
+        top4Promise.then(inTop4=>{
+          if(inTop4) _submitScoreOnResultScreen(newTotal);
+        });
+      }
     }
   },28);
 
@@ -1955,7 +1958,8 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
   if(currentLevel<10){
     btns.innerHTML+=`<button class="rbtn go" onclick="nextLvl()">LEVEL ${currentLevel+1} ▶</button>`;
   } else {
-    btns.innerHTML+=`<button class="rbtn go" onclick="showFinalHS()">🏆 EINDSTAND</button>`;
+    // Eindstand knop — alleen zichtbaar als HS popup niet automatisch opent
+    btns.innerHTML+=`<button class="rbtn go" id="btnEindstand" onclick="showFinalHS()">🏆 EINDSTAND</button>`;
     btns.innerHTML+=`<button class="rbtn" style="opacity:0.5;cursor:default;border-color:rgba(255,180,0,.3);color:rgba(255,180,0,.6)" onclick="void(0)">🔒 LEVEL 11 — BINNENKORT</button>`;
   }
   btns.innerHTML+=`<button class="rbtn" onclick="confirmRetry()">🔄 OPNIEUW</button>`;
@@ -2047,7 +2051,9 @@ async function _showHSPopup(myScore,playerName){
   const rankEl=document.getElementById('hspRank');
   const scoreEl=document.getElementById('hspScore');
 
-  // Score tonen
+  // Korte pauze zodat het resultaatscherm even zichtbaar is
+  await new Promise(r=>setTimeout(r,800));
+
   scoreEl.textContent=myScore.toLocaleString('nl-NL');
   board.innerHTML='';
   rankEl.textContent='';
@@ -2626,6 +2632,44 @@ function lightningAnimation(cb){
 
 // ── LOGO ANIMATIE ─────────────────────────────────────────────
 (function(){
+  // Reset logo animaties elke 10 seconden voor blijvende dynamiek
+  function resetLogoAnim(){
+    const lb=document.getElementById('logo-block');
+    const ls=document.getElementById('ls');
+    const lt=document.getElementById('lt');
+    const divider=document.getElementById('menu-divider');
+    const slogan=document.getElementById('menu-slogan');
+    const version=document.getElementById('menu-version');
+    if(!lb||!document.getElementById('smenu').classList.contains('active'))return;
+
+    // Reset letter spans
+    [lb,ls,lt,divider,slogan,version].forEach(el=>{
+      if(!el)return;
+      el.style.animation='none';
+      el.offsetHeight; // reflow
+    });
+    // Herstart alle animaties
+    lb.style.animation='logoFadeIn .8s cubic-bezier(.34,1.2,.64,1) forwards,logoFloat 4s ease-in-out 1s infinite,logoBlockPulse 3s ease-in-out 1s infinite';
+    lt.style.animation='ruinsGlow 2.5s ease-in-out infinite';
+    ls.style.animation='logoPulse 3s ease-in-out 1.2s infinite';
+    divider.style.animation='dividerExpand .8s .5s ease forwards';
+    slogan.style.animation='sloganFade .6s .8s ease forwards';
+    version.style.animation='sloganFade .6s 1s ease forwards';
+
+    // Letter spans opnieuw animeren
+    const spans=ls?ls.querySelectorAll('span'):[];
+    const delays=[.1,.22,.34,.46];
+    spans.forEach((s,i)=>{
+      s.style.animation='none';s.offsetHeight;
+      s.style.animation=`cardLetterPop .4s cubic-bezier(.34,1.56,.64,1) ${delays[i]}s forwards`;
+    });
+  }
+
+  // Start na 10 sec, herhaal elke 10 sec
+  setInterval(()=>{
+    if(document.getElementById('smenu')?.classList.contains('active')) resetLogoAnim();
+  }, 10000);
+
   function spawnLogoRune(){
     const lb=document.getElementById('logo-block');
     if(!lb||!document.getElementById('smenu').classList.contains('active'))return;
