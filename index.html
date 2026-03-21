@@ -177,7 +177,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;back
 @keyframes rbkFadeIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
 .rtitle.win{animation:resultGlow 2s ease-in-out infinite}
 /* ── GAME HIGHLIGHT SCHERM ── */
-#gameHighlight{display:none;position:fixed;inset:0;z-index:220;background:rgba(0,0,0,.97);flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0}
+#gameHighlight{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.97);flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0}
 #gameHighlight.show{display:flex}
 @keyframes hlSlideUp{0%{opacity:0;transform:translateY(40px)}100%{opacity:1;transform:translateY(0)}}
 @keyframes hlCardPop{0%{opacity:0;transform:scale(0.4) rotate(-10deg)}60%{transform:scale(1.15) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
@@ -193,7 +193,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;back
 .hl-card.combo-card{border-color:rgba(255,180,40,.6);box-shadow:0 0 16px rgba(255,180,40,.4),0 4px 20px rgba(0,0,0,.8)}
 
 /* ── HIGHSCORE POPUP ── */
-#hsPopup{display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.85);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px}
+#hsPopup{display:none;position:fixed;inset:0;z-index:1001;background:rgba(0,0,0,.85);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px}
 #hsPopup.show{display:flex}
 #hsPopup .hsp-title{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:4px;color:#ffd070;text-align:center}
 #hsPopup .hsp-score{font-size:48px;color:#ffd700;font-family:'Russo One',sans-serif;text-shadow:0 0 30px rgba(255,215,0,.7);text-align:center}
@@ -1966,9 +1966,8 @@ function endLevel(win){
 }
 
 // ── GAME HIGHLIGHT ──────────────────────────────────────────────
-function _isRed(suit){return suit==='♥'||suit==='♦';}
 function _makeHLCard(c,delay=0,glow=false){
-  const col=_isRed(c.suit)?'red':'blk';
+  const col=isRed(c.suit)?'red':'blk';
   const div=document.createElement('div');
   div.className='hl-card '+col+(glow?' combo-card':'');
   div.style.cssText=`opacity:0;animation:hlCardPop .4s cubic-bezier(.34,1.4,.64,1) ${delay}s forwards`;
@@ -1977,98 +1976,94 @@ function _makeHLCard(c,delay=0,glow=false){
 }
 
 function showGameHighlight(onDone){
-  const hl=document.getElementById('gameHighlight');
-  const badge=document.getElementById('hlBadge');
-  const title=document.getElementById('hlTitle');
-  const sub=document.getElementById('hlSub');
-  const cards=document.getElementById('hlCards');
-  const comboNum=document.getElementById('hlComboNum');
-  const tip=document.getElementById('hlTip');
-  const timerCircle=document.getElementById('hlTimer');
+  try{
+    const hl=document.getElementById('gameHighlight');
+    if(!hl){onDone();return;}
 
-  // Reset
-  cards.innerHTML='';comboNum.style.display='none';tip.style.display='none';
-  badge.textContent='';title.textContent='';sub.textContent='';
+    const log=_gameLog||{bestCombo:0,bestComboRun:[],fouten:0,foutCards:{}};
 
-  // Bepaal wat te tonen: beste combo of tip bij veel fouten
-  const log=_gameLog;
-  const circumference=100;
-  let phase='combo'; // of 'tip'
+    // Bepaal wat te tonen
+    let worstCount=0;
+    for(const count of Object.values(log.foutCards||{})){
+      if(count>worstCount)worstCount=count;
+    }
 
-  // Meeste fouten op 1 kaart
-  let worstCard=null,worstCount=0;
-  for(const [key,count] of Object.entries(log.foutCards)){
-    if(count>worstCount){worstCount=count;worstCard=key;}
-  }
+    const hasCombo=log.bestCombo>=3&&(log.bestComboRun||[]).length>=2;
+    const hasTip=worstCount>=2;
 
-  if(log.bestCombo>=5&&log.bestComboRun.length>=3){
-    phase='combo';
-  } else if(worstCount>=2){
-    phase='tip';
-  } else if(log.bestCombo>=2){
-    phase='combo';
-  } else {
-    // Niks speciaals — direct door
-    onDone();return;
-  }
+    if(!hasCombo&&!hasTip){onDone();return;} // Niks te tonen
 
-  hl.classList.add('show');
+    // Reset UI
+    document.getElementById('hlCards').innerHTML='';
+    document.getElementById('hlComboNum').style.display='none';
+    document.getElementById('hlTip').style.display='none';
+    document.getElementById('hlBadge').textContent='';
+    document.getElementById('hlTitle').textContent='';
+    document.getElementById('hlSub').textContent='';
 
-  if(phase==='combo'){
-    badge.textContent='✨ JOUW BESTE COMBO';
-    title.innerHTML=`<span style="color:#ffd700">${log.bestCombo}x</span> COMBO!`;
-    const run=log.bestComboRun.slice(-Math.min(log.bestComboRun.length,8));
-    sub.textContent=`${run.length} kaarten op rij — ${(run.reduce((a,m)=>a+m.pts,0)).toLocaleString('nl-NL')} punten`;
+    hl.classList.add('show');
 
-    // Kaarten één voor één laten invliegen
-    run.forEach((m,i)=>{
-      const card=_makeHLCard(m, 0.1+i*0.12, true);
-      cards.appendChild(card);
-    });
+    if(hasCombo){
+      document.getElementById('hlBadge').textContent='✨ JOUW BESTE COMBO';
+      document.getElementById('hlTitle').innerHTML=`<span style="color:#ffd700">${log.bestCombo}×</span> COMBO`;
+      const run=(log.bestComboRun||[]).slice(0,8);
+      const totalPts=run.reduce((a,m)=>a+(m.pts||0),0);
+      document.getElementById('hlSub').textContent=`${run.length} kaarten · ${totalPts.toLocaleString('nl-NL')} punten`;
 
-    // Combo getal
-    setTimeout(()=>{
-      comboNum.textContent='×'+log.bestCombo;
-      comboNum.style.display='block';
-      comboNum.style.animation='none';comboNum.offsetHeight;
-      comboNum.style.animation='hlSlideUp .4s ease forwards';
-    }, 0.1+run.length*0.12*1000+200);
+      const cardsEl=document.getElementById('hlCards');
+      run.forEach((m,i)=>{
+        const col=isRed(m.suit)?'red':'blk';
+        const div=document.createElement('div');
+        div.className='hl-card '+col+' combo-card';
+        div.style.cssText=`opacity:0;animation:hlCardPop .35s cubic-bezier(.34,1.4,.64,1) ${0.05+i*0.1}s forwards`;
+        div.innerHTML=`<span class="hl-card-suit">${m.rank}<br>${m.suit}</span><span class="hl-card-center">${m.suit}</span><span class="hl-card-suit-bot">${m.rank}<br>${m.suit}</span>`;
+        cardsEl.appendChild(div);
+      });
 
-  } else {
-    // Tip modus
-    phase='tip';
-    badge.textContent='💡 TIP VOOR JOU';
-    title.textContent='VEELGEMAAKTE FOUT';
-    const suit=worstCard?worstCard.slice(-1):'';
-    const rank=worstCard?worstCard.slice(0,-1):'';
-    tip.style.display='block';
-    tip.innerHTML=`Je klikte <b style="color:#ff8080">${worstCount}x</b> op een kaart die niet speelbaar was.<br><br>
-      💡 <b style="color:#80c8ff">Let op het verschil:</b> een kaart is alleen speelbaar als de waarde 1 hoger of lager is dan de aflegkaart. Aas en Koning sluiten op elkaar aan.`;
-    sub.textContent='Onthoud dit voor de volgende run!';
-  }
+      setTimeout(()=>{
+        const cn=document.getElementById('hlComboNum');
+        cn.textContent='×'+log.bestCombo;
+        cn.style.display='block';
+        cn.style.animation='none';void cn.offsetHeight;
+        cn.style.animation='hlSlideUp .4s ease forwards';
+      }, 200+run.length*100);
 
-  // Countdown timer: 5 seconden dan automatisch door
-  let elapsed=0;
-  const total=5000;
-  const interval=50;
-  const timerIv=setInterval(()=>{
-    elapsed+=interval;
-    const pct=elapsed/total;
-    timerCircle.setAttribute('stroke-dashoffset', pct*circumference);
-    if(elapsed>=total){
+    } else {
+      document.getElementById('hlBadge').textContent='💡 TIP VOOR JOU';
+      document.getElementById('hlTitle').textContent='KIJK GOED VOOR JE KLIKT';
+      const tip=document.getElementById('hlTip');
+      tip.style.display='block';
+      tip.innerHTML=`Je klikte <b style="color:#ff8080">${worstCount}×</b> op een kaart die niet aansloot.<br><br>
+        <b style="color:#80c8ff">Tip:</b> een kaart speelt alleen als de waarde precies 1 hoger of lager is dan de aflegstapel. Aas en Koning sluiten op elkaar aan.`;
+    }
+
+    // Countdown 5 seconden, klik om te skippen
+    let elapsed=0;
+    const total=4500;
+    const timerCircle=document.getElementById('hlTimer');
+    const timerIv=setInterval(()=>{
+      elapsed+=50;
+      const pct=Math.min(elapsed/total,1);
+      timerCircle.setAttribute('stroke-dashoffset',pct*100);
+      if(elapsed>=total){
+        clearInterval(timerIv);
+        hl.classList.remove('show');
+        onDone();
+      }
+    },50);
+
+    const skipOnce=()=>{
       clearInterval(timerIv);
       hl.classList.remove('show');
+      hl.removeEventListener('click',skipOnce);
       onDone();
-    }
-  },interval);
+    };
+    hl.addEventListener('click',skipOnce);
 
-  // Klik = ook doorgaan
-  hl.addEventListener('click',function once(){
-    clearInterval(timerIv);
-    hl.classList.remove('show');
-    hl.removeEventListener('click',once);
-    onDone();
-  });
+  }catch(e){
+    console.warn('highlight error:',e);
+    onDone(); // Altijd doorgaan ook bij error
+  }
 }
 // ── EINDE GAME HIGHLIGHT ─────────────────────────────────────────
 
