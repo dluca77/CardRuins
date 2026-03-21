@@ -78,19 +78,29 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;back
 #mleft{width:42%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:max(20px,env(safe-area-inset-top,20px)) 20px max(20px,env(safe-area-inset-bottom,20px))}
 
 /* Logo animaties */
-@keyframes logoFadeIn{0%{opacity:0;transform:translateY(-24px) scale(.92)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes logoFadeIn{0%{opacity:0;transform:translateY(-32px) scale(.88) rotate(-1deg)}70%{transform:translateY(4px) scale(1.03) rotate(.3deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
 @keyframes logoPulse{0%,100%{text-shadow:0 0 20px rgba(255,160,40,.5),0 3px 8px rgba(0,0,0,.8)}50%{text-shadow:0 0 40px rgba(255,180,60,.9),0 3px 8px rgba(0,0,0,.8)}}
-@keyframes ruinsGlow{0%,100%{text-shadow:0 0 16px rgba(255,160,40,.6)}50%{text-shadow:0 0 32px rgba(255,180,60,1),0 0 60px rgba(255,120,20,.4)}}
+@keyframes ruinsGlow{0%,100%{text-shadow:0 0 16px rgba(255,160,40,.6),0 2px 6px rgba(0,0,0,.8)}50%{text-shadow:0 0 40px rgba(255,180,60,1),0 0 80px rgba(255,120,20,.5),0 2px 6px rgba(0,0,0,.8)}}
 @keyframes dividerExpand{0%{width:0;opacity:0}100%{width:60%;opacity:1}}
 @keyframes sloganFade{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes cardLetterPop{0%{opacity:0;transform:translateY(-20px) scale(.6)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes logoBlockPulse{0%,100%{box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 50px rgba(220,140,30,.12),inset 0 1px 0 rgba(255,180,50,.18)}50%{box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 80px rgba(220,140,30,.28),0 0 120px rgba(200,100,20,.1),inset 0 1px 0 rgba(255,180,50,.25)}}
+@keyframes shineSweep{0%{transform:translateX(-100%) skewX(-15deg)}100%{transform:translateX(300%) skewX(-15deg)}}
 
-#logo-block{text-align:center;padding:18px 28px;background:linear-gradient(160deg,rgba(20,12,0,.85) 0%,rgba(40,22,0,.8) 30%,rgba(15,8,0,.92) 100%);border:1px solid rgba(220,150,40,.4);border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 50px rgba(220,140,30,.12),inset 0 1px 0 rgba(255,180,50,.18);position:relative;backdrop-filter:blur(16px);animation:logoFadeIn .7s cubic-bezier(.34,1.2,.64,1) forwards}
+#logo-block{text-align:center;padding:18px 28px;background:linear-gradient(160deg,rgba(20,12,0,.85) 0%,rgba(40,22,0,.8) 30%,rgba(15,8,0,.92) 100%);border:1px solid rgba(220,150,40,.4);border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 50px rgba(220,140,30,.12),inset 0 1px 0 rgba(255,180,50,.18);position:relative;backdrop-filter:blur(16px);overflow:hidden;animation:logoFadeIn .8s cubic-bezier(.34,1.2,.64,1) forwards,logoFloat 4s ease-in-out 1s infinite,logoBlockPulse 3s ease-in-out 1s infinite}
 #logo-block::before{content:'';position:absolute;top:-1px;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,200,80,.5),transparent)}
-#ls{font-size:52px;color:#e0e8ff;letter-spacing:4px;line-height:1;text-shadow:0 0 20px rgba(100,150,255,.6),0 3px 8px rgba(0,0,0,.8)}
-#lt{font-size:22px;color:#ffaa30;letter-spacing:8px;margin-top:2px;animation:ruinsGlow 3s ease-in-out infinite}
+#logo-block::after{content:'';position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);transform:translateX(-100%) skewX(-15deg);animation:shineSweep 4s ease-in-out 2s infinite}
+#ls{font-size:52px;color:#e0e8ff;letter-spacing:4px;line-height:1;text-shadow:0 0 20px rgba(100,150,255,.6),0 3px 8px rgba(0,0,0,.8);animation:logoPulse 3s ease-in-out 1.2s infinite}
+#lt{font-size:22px;color:#ffaa30;letter-spacing:8px;margin-top:2px;animation:ruinsGlow 2.5s ease-in-out infinite}
 #menu-divider{width:0;height:1px;background:linear-gradient(90deg,transparent,rgba(220,150,40,.5),transparent);margin:12px auto 10px;animation:dividerExpand .8s .5s ease forwards;opacity:0}
 #menu-slogan{font-family:'Rajdhani',sans-serif;font-size:14px;font-style:italic;color:rgba(255,235,190,0.95);text-align:center;letter-spacing:1px;line-height:1.4;opacity:0;animation:sloganFade .6s .8s ease forwards}
 #menu-version{font-family:'Rajdhani',sans-serif;font-size:12px;letter-spacing:3px;color:rgba(255,255,255,0.5);text-align:center;margin-top:6px;opacity:0;animation:sloganFade .6s 1s ease forwards}
+#ls .ls-c,#ls .ls-a,#ls .ls-r,#ls .ls-d{display:inline-block;opacity:0;animation:cardLetterPop .4s cubic-bezier(.34,1.56,.64,1) forwards}
+#ls .ls-c{animation-delay:.1s}
+#ls .ls-a{animation-delay:.22s}
+#ls .ls-r{animation-delay:.34s}
+#ls .ls-d{animation-delay:.46s}
 
 /* Knoppen */
 #mright{width:58%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:max(16px,env(safe-area-inset-top,16px)) 40px max(16px,env(safe-area-inset-bottom,16px))}
@@ -166,6 +176,23 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;back
 @keyframes loseShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px) rotate(-2deg)}30%{transform:translateX(8px) rotate(2deg)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}}
 @keyframes rbkFadeIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
 .rtitle.win{animation:resultGlow 2s ease-in-out infinite}
+/* ── HIGHSCORE POPUP ── */
+#hsPopup{display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.85);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px}
+#hsPopup.show{display:flex}
+#hsPopup .hsp-title{font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:4px;color:#ffd070;text-align:center}
+#hsPopup .hsp-score{font-size:48px;color:#ffd700;font-family:'Russo One',sans-serif;text-shadow:0 0 30px rgba(255,215,0,.7);text-align:center}
+#hsPopup .hsp-board{display:flex;flex-direction:column;gap:6px;min-width:280px;max-width:380px;width:90%}
+#hsPopup .hsp-row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);transition:all .4s;font-family:'Russo One',sans-serif}
+#hsPopup .hsp-row.me{background:rgba(255,215,0,.15);border-color:rgba(255,215,0,.5);box-shadow:0 0 20px rgba(255,215,0,.2)}
+#hsPopup .hsp-rank{font-size:18px;min-width:28px;text-align:center}
+#hsPopup .hsp-name{flex:1;font-size:12px;letter-spacing:1px;color:#d8d0b0}
+#hsPopup .hsp-name.me{color:#ffd700}
+#hsPopup .hsp-pts{font-size:14px;color:#60c0ff}
+#hsPopup .hsp-pts.me{color:#ffd700}
+@keyframes hsRowFlyIn{0%{opacity:0;transform:translateX(80px) scale(.8)}60%{transform:translateX(-8px) scale(1.05)}100%{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes hsNameFlash{0%,100%{text-shadow:none}30%{text-shadow:0 0 20px #ffd700,0 0 40px #ffd700}70%{text-shadow:0 0 10px #ffd700}}
+.hsp-row.fly-in{animation:hsRowFlyIn .5s cubic-bezier(.34,1.2,.64,1) both}
+.hsp-row.me .hsp-name{animation:hsNameFlash 1.2s ease .5s}
 .rtitle.lose{animation:loseShake .5s ease .3s}
 #rbkdown .rbk{animation:rbkFadeIn .4s ease both}
 #rbkdown .rbk:nth-child(1){animation-delay:.1s}
@@ -556,11 +583,11 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 <div id="smenu" class="screen active">
   <div id="mleft">
     <div id="logo-block">
-      <div id="ls">CARD</div>
+      <div id="ls"><span class="ls-c">C</span><span class="ls-a">A</span><span class="ls-r">R</span><span class="ls-d">D</span></div>
       <div id="lt">RUINS</div>
       <div id="menu-divider"></div>
       <div id="menu-slogan">Beat the deck.</div>
-      <div id="menu-version">v1.2.9</div>
+      <div id="menu-version">v1.3.0</div>
     </div>
   </div>
   <div id="mright">
@@ -1431,7 +1458,7 @@ function doPlay(card,el,target){sfxCard();
   const pts=getBasis()*combo;  // basis(level) × combo-positie
   score+=pts;
   if(target==='main')discard={rank:card.rank,suit:card.suit};
-  else bonusDiscard={rank:card.rank,suit:card.suit};
+  else{bonusDiscard={rank:card.rank,suit:card.suit};_ach.bonusAangeraakt=true;}
   if(el){
     const r=el.getBoundingClientRect();
     scorePop(pts,r.left+r.width/2,r.top+r.height/2,false);
@@ -1625,7 +1652,7 @@ function renderDraw(){
 }
 function renderCombo(){
   const el=document.getElementById('cval');if(!el)return;
-  if(combo>0){sfxCombo(combo);_spawnComboSparks(el,combo);}
+  if(combo>0){sfxCombo(combo);if(el)_spawnComboSparks(el,combo);}
   _updateComboFx(combo);
 
   // Color for new value
@@ -2005,25 +2032,90 @@ function nextLvl(){
 }
 function retryLvl(){document.getElementById('ovres').classList.remove('show');currentLevel=1;totalScore=0;levelScores=new Array(11).fill(0);initLevel(1);}
 
-async function _submitScoreOnResultScreen(score){
-  // Naam vragen op het resultaatscherm zelf
-  const lastName=localStorage.getItem('cr_playername')||'';
+async function _submitScoreOnResultScreen(myScore){
+  // Stap 1: naam invoeren
   const name=await _showNameModal();
-  if(name&&name.trim()){
-    const trimmed=name.trim().substring(0,20);
-    localStorage.setItem('cr_playername',trimmed);
+  const trimmed=(name||'').trim().substring(0,20);
+
+  // Stap 2: toon HS popup met live animatie
+  await _showHSPopup(myScore,trimmed);
+}
+
+async function _showHSPopup(myScore,playerName){
+  const popup=document.getElementById('hsPopup');
+  const board=document.getElementById('hspBoard');
+  const rankEl=document.getElementById('hspRank');
+  const scoreEl=document.getElementById('hspScore');
+
+  // Score tonen
+  scoreEl.textContent=myScore.toLocaleString('nl-NL');
+  board.innerHTML='';
+  rankEl.textContent='';
+  popup.classList.add('show');
+
+  // Submit naar Supabase als naam ingevuld
+  let submittedOk=false;
+  if(playerName){
+    localStorage.setItem('cr_playername',playerName);
     try{
-      await _supabase.from('highscores').insert({name:trimmed,score});
-      // Opruimen buiten top 4
+      await _supabase.from('highscores').insert({name:playerName,score:myScore});
       const{data:all}=await _supabase.from('highscores').select('id').order('score',{ascending:false});
       if(all&&all.length>4) for(const row of all.slice(4)) await _supabase.from('highscores').delete().eq('id',row.id);
+      submittedOk=true;
     }catch(e){console.warn('Score submit failed:',e);}
+  }
+
+  // Laad de ranglijst en animeer rijen
+  try{
+    const{data}=await _supabase.from('highscores').select('name,score').order('score',{ascending:false}).limit(4);
+    const medals=['🥇','🥈','🥉','🏅'];
+    const rows=data||[];
+    const myIdx=rows.findIndex(r=>r.score===myScore&&(!playerName||r.name===playerName));
+
+    // Rijen één voor één laten invliegen
+    for(let i=0;i<rows.length;i++){
+      const r=rows[i];
+      const isMe=i===myIdx;
+      const row=document.createElement('div');
+      row.className='hsp-row'+(isMe?' me':'');
+      row.style.animationDelay=(i*0.15)+'s';
+      row.innerHTML=`
+        <span class="hsp-rank">${medals[i]||('#'+(i+1))}</span>
+        <span class="hsp-name${isMe?' me':''}">${r.name||'Speler'}</span>
+        <span class="hsp-pts${isMe?' me':''}">${r.score.toLocaleString('nl-NL')}</span>`;
+      board.appendChild(row);
+      // Vlieg-in animatie na korte delay
+      setTimeout(()=>{
+        row.classList.add('fly-in');
+        // Goudstof burst bij eigen rij
+        if(isMe) _burstHSParticles(row);
+      }, 200+i*200);
+    }
+
+    // Rank label
+    if(myIdx===0) rankEl.textContent='🥇 WERELDRECORD!';
+    else if(myIdx>0) rankEl.textContent=`🏆 RANK #${myIdx+1} WERELDWIJD!`;
+
+  }catch(e){console.warn('HS load failed:',e);}
+}
+
+function _burstHSParticles(rowEl){
+  const r=rowEl.getBoundingClientRect();
+  const cx=r.left+r.width/2, cy=r.top+r.height/2;
+  const colors=['#ffd700','#ffaa20','#fff0a0','#ff8800'];
+  for(let i=0;i<20;i++){
+    const p=document.createElement('div');
+    const size=3+Math.random()*4, angle=Math.random()*Math.PI*2, dist=40+Math.random()*80, dur=0.5+Math.random()*0.5;
+    const col=colors[Math.floor(Math.random()*colors.length)];
+    p.style.cssText=`position:fixed;left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;border-radius:50%;background:${col};pointer-events:none;z-index:999;--cpx:${Math.cos(angle)*dist}px;--cpy:${Math.sin(angle)*dist}px;animation:comboPart ${dur}s ease-out forwards`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),dur*1000+100);
   }
 }
 
 async function showFinalHS(){
   document.getElementById('ovres').classList.remove('show');
-  // Zorg dat totalScore altijd de volledige score heeft inclusief level 10 bonussen
+  document.getElementById('hsPopup').classList.remove('show');
   totalScore=levelScores.reduce((a,v)=>a+v,0);
   const ov=document.getElementById('ovfinal');
   ov.style.display='flex';
@@ -2531,6 +2623,41 @@ function lightningAnimation(cb){
   }
   tick();
 })();
+
+// ── LOGO ANIMATIE ─────────────────────────────────────────────
+(function(){
+  function spawnLogoRune(){
+    const lb=document.getElementById('logo-block');
+    if(!lb||!document.getElementById('smenu').classList.contains('active'))return;
+    const r=lb.getBoundingClientRect();
+    // Random positie rondom het blok
+    const side=Math.floor(Math.random()*4);
+    let x,y;
+    const margin=40;
+    if(side===0){x=r.left-margin+Math.random()*r.width;y=r.top-margin;}       // boven
+    else if(side===1){x=r.right+margin*0.3;y=r.top+Math.random()*r.height;}   // rechts
+    else if(side===2){x=r.left-margin+Math.random()*r.width;y=r.bottom+20;}   // onder
+    else{x=r.left-margin*0.5;y=r.top+Math.random()*r.height;}                 // links
+
+    const glyphs=['ᚠ','ᚱ','ᚲ','ᛁ','ᛊ','ᛏ','ᛒ','ᛖ','ᚨ','ᛟ'];
+    const el=document.createElement('div');
+    const size=12+Math.random()*18;
+    const hue=Math.random()<0.6?40+Math.random()*20:200+Math.random()*40;
+    el.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];
+    el.style.cssText=`position:fixed;left:${x}px;top:${y}px;font-size:${size}px;font-family:'Russo One',serif;color:hsla(${hue},80%,65%,0);pointer-events:none;z-index:8;transition:opacity .4s;text-shadow:0 0 8px hsla(${hue},80%,60%,.8)`;
+    document.body.appendChild(el);
+    requestAnimationFrame(()=>{ el.style.opacity='0.7'; });
+    // Fade out en verwijder
+    setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.remove(),450); }, 800+Math.random()*600);
+  }
+  // Spawn elke 600-1200ms een rune rondom het logo
+  function scheduleRune(){
+    spawnLogoRune();
+    setTimeout(scheduleRune, 600+Math.random()*700);
+  }
+  setTimeout(scheduleRune, 1500);
+})();
+// ── EINDE LOGO ANIMATIE ───────────────────────────────────────
 // ── END PARTICLE BACKGROUND ──────────────────────────────────
 // ── SFEER DEELTJES: GOUDSTOF + RUNEGLYPHS ────────────────────
 (function(){
@@ -4273,6 +4400,14 @@ async function submitOnlineScore(score){
   </div>
 </div>
 
+<div id="hsPopup">
+  <div class="hsp-title">🏆 WERELDRANGLIJST</div>
+  <div class="hsp-score" id="hspScore">0</div>
+  <div class="hsp-board" id="hspBoard"></div>
+  <div id="hspRank" style="font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:2px;color:#60c0ff;min-height:18px;text-align:center"></div>
+  <button onclick="showFinalHS()" style="font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;padding:12px 32px;border-radius:24px;border:2px solid rgba(255,215,0,.4);background:rgba(255,215,0,.1);color:#ffd070;cursor:pointer;margin-top:8px">EINDSTAND BEKIJKEN ▶</button>
+</div>
+
 <div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;padding:12px 16px max(12px,env(safe-area-inset-bottom));background:linear-gradient(135deg,rgba(20,12,0,0.97),rgba(35,20,5,0.97));border-top:1px solid rgba(200,140,40,0.4);box-shadow:0 -4px 20px rgba(0,0,0,0.5);backdrop-filter:blur(12px)">
   <div style="display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto">
     <div style="font-size:28px;flex-shrink:0">📲</div>
@@ -4326,7 +4461,7 @@ async function submitOnlineScore(score){
     <div style="background:rgba(10,4,0,.98);border-bottom:1px solid rgba(200,140,40,.2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5">
       <div>
         <div style="font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:3px;color:#ffd070">⚔️ ADMIN</div>
-        <div style="font-size:10px;color:rgba(255,100,80,.7);letter-spacing:2px">CARD RUINS v1.2.9</div>
+        <div style="font-size:10px;color:rgba(255,100,80,.7);letter-spacing:2px">CARD RUINS v1.3.0</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span id="aLastRefresh" style="font-size:10px;color:rgba(255,255,255,.25)"></span>
@@ -4812,40 +4947,123 @@ function aToast(msg){
 
 // ── ACHIEVEMENTS ─────────────────────────────────────────────
 const ACH_DEFS=[
-  {id:'pyromaan',   e:'🔥',n:'Pyromaan',       d:'Bereik combo 20+ in 1 level',                              secret:false},
-  {id:'speedster',  e:'⚡',n:'Snelheidsduivel', d:'Speel een level uit binnen 30 seconden',                   secret:false},
-  {id:'waarzegger', e:'🃏',n:'Waarzegger',    d:'15 kaarten op rij zonder fout of trekken',                 secret:false},
-  {id:'gladiator',  e:'💎',n:'Gladiator',      d:'Speel een level uit zonder 1 fout',                        secret:false},
-  {id:'sharp',      e:'🎯',n:'Scherpschutter', d:'Win 5 levels op rij zonder game over',                     secret:false},
-  {id:'ontdekker',  e:'🌱',n:'Ontdekker',      d:'Bereik level 10 voor het eerst',                           secret:false},
-  {id:'archeoloog', e:'🏛',n:'Archeoloog',     d:'Leeg alle 3 piramides in level 1, 2 én 3',           secret:false},
-  {id:'meester',    e:'👑',n:'Meester',         d:'Alle 10 levels in 1 sessie zonder game over',              secret:false},
-  {id:'doorzetter1',e:'💀',n:'Doorzetter I',   d:'Speel 100 potjes totaal',                                  secret:false},
-  {id:'doorzetter2',e:'💀',n:'Doorzetter II',  d:'Speel 250 potjes totaal',                                  secret:false},
-  {id:'doorzetter3',e:'💀',n:'Doorzetter III', d:'Speel 500 potjes totaal',                                  secret:false},
-  {id:'wereldtop',  e:'🌍',n:'Wereldtop',      d:'Sta op #1 in de wereldwijde highscore',                    secret:false},
-  {id:'legenda',    e:'🔮',n:'Legenda',         d:'Bereik een totaalscore van 13 miljoen',                    secret:false},
-  {id:'pechvogel',  e:'😈',n:'Pechvogel',      d:'???',                                                      secret:true},
-  {id:'gokker',     e:'🎰',n:'Gokker',          d:'???',                                                      secret:true},
-  // Nieuwe achievements
-  {id:'ongenaakbaar', e:'⚔️',n:'Ongenaakbaar',   d:'Win een level zonder de bonuskaart te gebruiken',          secret:false},
-  {id:'tsunami',      e:'🌊',n:'Tsunami',        d:'Speel alle 10 open kaarten weg voordat je 1x trekt',       secret:false},
-  {id:'fokus',        e:'🎯',n:'Fokus',           d:'Win 3 levels op rij zonder een fout te maken',             secret:false},
-  {id:'nachtbraker',  e:'🌙',n:'Nachtbraker',    d:'Win 25 levels totaal',                                      secret:false},
-  {id:'veteraan',     e:'⭐',n:'Veteraan',        d:'Speel 1000 kaarten totaal',                                secret:false},
-  {id:'bouwheer',     e:'🏰',n:'Bouwheer',       d:'Leeg alle piramides in 5 verschillende levels',            secret:false},
-  {id:'geslaagd',     e:'🎓',n:'Geslaagd',       d:'Win alle 10 levels minstens 1x',                           secret:false},
-  {id:'sociaal',      e:'🤝',n:'Sociaal',         d:'Speel je eerste multiplayer potje',                        secret:false},
-  {id:'rivaal',       e:'👊',n:'Rivaal',          d:'Win een multiplayer potje',                                secret:false},
-  {id:'kampioen',     e:'🏆',n:'Kampioen',        d:'Win 3 multiplayer potjes op rij',                          secret:false},
-  {id:'marathonloper',e:'❓',n:'Marathonloper',   d:'???',                                                      secret:true},
-  {id:'trekverslaafd',e:'❓',n:'Trekverslaafd',   d:'???',                                                      secret:true},
-  {id:'comeback',     e:'❓',n:'Comeback',        d:'???',                                                      secret:true},
-  {id:'geluksvogel',  e:'❓',n:'Geluksvogel',     d:'???',                                                      secret:true},
-  {id:'perfectrun',   e:'❓',n:'Perfecte Run',    d:'???',                                                      secret:true},
+  // ── COMBO ──
+  {id:'pyromaan',    e:'🔥',n:'Pyromaan',          d:'Bereik combo 20+ in 1 level',                            secret:false},
+  {id:'combo5',      e:'⚡',n:'Vonk',               d:'Bereik combo 5',                                         secret:false},
+  {id:'combo10',     e:'💥',n:'Explosie',           d:'Bereik combo 10',                                        secret:false},
+  {id:'combo15',     e:'🌪',n:'Wervelwind',         d:'Bereik combo 15',                                        secret:false},
+  {id:'combo25',     e:'☄️',n:'Meteoor',            d:'Bereik combo 25 in 1 level',                             secret:false},
+  {id:'combo28',     e:'🌋',n:'Vulkaan',            d:'Bereik combo 28 — alle kaarten op rij!',                 secret:false},
+  // ── SPEED ──
+  {id:'speedster',   e:'⏱',n:'Snelheidsduivel',    d:'Speel een level uit binnen 30 seconden',                 secret:false},
+  {id:'flits',       e:'💨',n:'Flits',              d:'Win een level met nog 90+ seconden over',                secret:false},
+  {id:'haast',       e:'🏃',n:'Haast',              d:'Win een level met minder dan 5 seconden over',           secret:false},
+  {id:'sprint',      e:'🚀',n:'Sprint',             d:'Win level 10 binnen 60 seconden',                        secret:false},
+  // ── FOUTLOOS ──
+  {id:'gladiator',   e:'💎',n:'Gladiator',          d:'Win een level zonder 1 fout',                            secret:false},
+  {id:'fokus',       e:'🎯',n:'Fokus',              d:'Win 3 levels op rij zonder fout',                        secret:false},
+  {id:'chirurg',     e:'🔬',n:'Chirurg',            d:'Win 5 levels op rij zonder fout',                        secret:false},
+  {id:'ongenaakbaar',e:'⚔️',n:'Ongenaakbaar',       d:'Win een level zonder de bonuskaart te gebruiken',        secret:false},
+  {id:'perfectrun',  e:'🌟',n:'Perfecte Run',       d:'Win een level zonder fout én zonder te trekken',         secret:false},
+  {id:'perfect10',   e:'✨',n:'Perfect Spel',       d:'Win level 10 zonder fout én zonder te trekken',          secret:false},
+  // ── KAARTENRIJ ──
+  {id:'waarzegger',  e:'🃏',n:'Waarzegger',         d:'15 kaarten op rij zonder fout of trekken',               secret:false},
+  {id:'tsunami',     e:'🌊',n:'Tsunami',            d:'Speel alle 10 open kaarten weg voor je 1x trekt',        secret:false},
+  {id:'onverstoord', e:'🧘',n:'Onverstoord',        d:'20 kaarten op rij zonder fout of trekken',               secret:false},
+  {id:'kaartenregen',e:'🌧',n:'Kaartenregen',       d:'30 kaarten op rij zonder fout of trekken',               secret:false},
+  // ── PROGRESSIE ──
+  {id:'ontdekker',   e:'🌱',n:'Ontdekker',          d:'Bereik level 10 voor het eerst',                         secret:false},
+  {id:'sharp',       e:'🎯',n:'Scherpschutter',     d:'Win 5 levels op rij zonder game over',                   secret:false},
+  {id:'archeoloog',  e:'🏛',n:'Archeoloog',         d:'Leeg alle 3 piramides in level 1, 2 én 3',               secret:false},
+  {id:'meester',     e:'👑',n:'Meester',            d:'Alle 10 levels in 1 sessie zonder game over',             secret:false},
+  {id:'nachtbraker', e:'🌙',n:'Nachtbraker',        d:'Win 25 levels totaal',                                   secret:false},
+  {id:'geslaagd',    e:'🎓',n:'Geslaagd',           d:'Win alle 10 levels minstens 1x',                         secret:false},
+  {id:'bouwheer',    e:'🏰',n:'Bouwheer',           d:'Leeg alle piramides in 5 verschillende levels',           secret:false},
+  {id:'piramideslooper',e:'🔺',n:'Piramide Meester',d:'Leeg alle piramides in alle 10 levels',                  secret:false},
+  {id:'comeback',    e:'⏰',n:'Comeback',           d:'Win een level met minder dan 3 seconden over',            secret:false},
+  {id:'winstreak10', e:'🔥',n:'Op Stoom',           d:'Win 10 levels op rij zonder game over',                  secret:false},
+  // ── GRIND ──
+  {id:'doorzetter1', e:'🥉',n:'Doorzetter I',       d:'Speel 100 potjes totaal',                                secret:false},
+  {id:'doorzetter2', e:'🥈',n:'Doorzetter II',      d:'Speel 250 potjes totaal',                                secret:false},
+  {id:'doorzetter3', e:'🥇',n:'Doorzetter III',     d:'Speel 500 potjes totaal',                                secret:false},
+  {id:'doorzetter4', e:'💎',n:'Doorzetter IV',      d:'Speel 1000 potjes totaal',                               secret:false},
+  {id:'veteraan',    e:'⭐',n:'Veteraan',           d:'Speel 1000 kaarten totaal',                               secret:false},
+  {id:'kaartenmolen',e:'🎴',n:'Kaartenmolen',       d:'Speel 5000 kaarten totaal',                              secret:false},
+  {id:'kaartfanaat', e:'🃏',n:'Kaartfanaat',        d:'Speel 10.000 kaarten totaal',                            secret:false},
+  {id:'levelgrinder',e:'⚙️',n:'Level Grinder',      d:'Win elk level minstens 5x',                              secret:false},
+  {id:'win100',      e:'🏅',n:'100 Wins',           d:'Win 100 levels totaal',                                  secret:false},
+  {id:'win250',      e:'🏆',n:'250 Wins',           d:'Win 250 levels totaal',                                  secret:false},
+  // ── SCORE ──
+  {id:'legenda',     e:'🔮',n:'Legenda',            d:'Bereik een totaalscore van 13 miljoen',                  secret:false},
+  {id:'wereldtop',   e:'🌍',n:'Wereldtop',          d:'Sta op #1 in de wereldwijde highscore',                  secret:false},
+  {id:'miljoenair',  e:'💰',n:'Miljoenair',         d:'Bereik 1 miljoen punten totaal',                         secret:false},
+  {id:'grootverdiener',e:'💵',n:'Grootverdiener',   d:'Bereik 5 miljoen punten totaal',                         secret:false},
+  {id:'bonusking',   e:'👸',n:'Bonus King',         d:'Verdien 3x een piramidebonus in 1 level',                secret:false},
+  {id:'tijdbonus100',e:'⏳',n:'Tijdbonus Expert',   d:'Verdien tijdbonus van meer dan 100.000 punten',           secret:false},
+  // ── SPEELSTIJL ──
+  {id:'trekverslaafd',e:'🎰',n:'Trekverslaafd',     d:'Trek 20x uit de stapel in 1 level maar win toch',        secret:false},
+  {id:'minTrekker',  e:'🃏',n:'Minimalisme',        d:'Win een level zonder ooit te trekken',                   secret:false},
+  {id:'bonusvrij',   e:'🚫',n:'Bonusvrij',          d:'Win 5 levels zonder de bonuskaart aan te raken',         secret:false},
+  {id:'allPyramids', e:'🔺',n:'Tempelrover',        d:'Leeg alle 3 piramides in 1 level',                       secret:false},
+  {id:'openFirst',   e:'🌅',n:'Open Kaart Expert',  d:'Win een level puur op de open rij',                      secret:false},
+  // ── MULTIPLAYER ──
+  {id:'sociaal',     e:'🤝',n:'Sociaal',            d:'Speel je eerste multiplayer potje',                      secret:false},
+  {id:'rivaal',      e:'👊',n:'Rivaal',             d:'Win een multiplayer potje',                              secret:false},
+  {id:'kampioen',    e:'🏆',n:'Kampioen',           d:'Win 3 multiplayer potjes op rij',                        secret:false},
+  {id:'mpmeester',   e:'👑',n:'MP Meester',         d:'Win 10 multiplayer potjes totaal',                       secret:false},
+  {id:'mpmarathon',  e:'🏃',n:'MP Marathon',        d:'Speel 25 multiplayer potjes totaal',                     secret:false},
+  // ── LEVEL SPECIFIEK ──
+  {id:'lvl1perfect', e:'1️⃣',n:'Level 1 Perfect',   d:'Win level 1 zonder fout',                                secret:false},
+  {id:'lvl5win',     e:'5️⃣',n:'Halverwege',         d:'Win level 5 voor het eerst',                             secret:false},
+  {id:'lvl7win',     e:'7️⃣',n:'Zeven',              d:'Win level 7 voor het eerst',                             secret:false},
+  {id:'lvl10first',  e:'🔟',n:'Eindbaas',           d:'Win level 10 voor het eerste keer',                      secret:false},
+  {id:'lvl10speed',  e:'⚡',n:'Eindbaas Speed',     d:'Win level 10 binnen 45 seconden',                        secret:false},
+  {id:'lvl10flawless',e:'💫',n:'Eindbaas Perfect',  d:'Win level 10 zonder fout',                               secret:false},
+  // ── TELLER ──
+  {id:'fouten10',    e:'💔',n:'Struikelvogel',      d:'Maak 10 fouten in 1 level maar win toch',                secret:false},
+  {id:'fouten50lvl', e:'🤦',n:'Leerling',           d:'Maak totaal 50 fouten over alle potjes',                 secret:false},
+  {id:'reddertje',   e:'🛟',n:'Reddertje',          d:'Win een level terwijl je 1 sec over had',                secret:false},
+  // ── GEHEIM ──
+  {id:'pechvogel',   e:'😈',n:'Pechvogel',          d:'???',                                                    secret:true},
+  {id:'gokker',      e:'🎰',n:'Gokker',             d:'???',                                                    secret:true},
+  {id:'marathonloper',e:'🌄',n:'Marathonloper',     d:'???',                                                    secret:true},
+  {id:'geluksvogel', e:'🍀',n:'Geluksvogel',        d:'???',                                                    secret:true},
+  {id:'ghostplayer', e:'👻',n:'Geest',              d:'???',                                                    secret:true},
+  {id:'nachtzwever', e:'🦇',n:'Nachtzwever',        d:'???',                                                    secret:true},
+  {id:'runekenner',  e:'ᚱ', n:'Runekenner',         d:'???',                                                    secret:true},
+  {id:'kaartgod',    e:'🃏',n:'Kaartgod',           d:'???',                                                    secret:true},
+  {id:'tijdreiziger',e:'⌛',n:'Tijdreiziger',       d:'???',                                                    secret:true},
+  {id:'orakel',      e:'🔮',n:'Orakel',             d:'???',                                                    secret:true},
+  {id:'stilte',      e:'🤫',n:'Stilte',             d:'???',                                                    secret:true},
+  {id:'zenmaster',   e:'☯️',n:'Zen Master',         d:'???',                                                    secret:true},
+  {id:'ruines',      e:'🏚',n:'Ruines',             d:'???',                                                    secret:true},
+  {id:'kaartentempel',e:'🗿',n:'Kaartentempel',     d:'???',                                                    secret:true},
+  {id:'onzichtbaar', e:'🌫',n:'Onzichtbaar',        d:'???',                                                    secret:true},
+  // ── EXTRA SKILL ──
+  {id:'dubbelop',    e:'2️⃣',n:'Dubbelop',            d:'Win een level 2x op rij dezelfde dag',                   secret:false},
+  {id:'earlybird',   e:'🐦',n:'Vroege Vogel',         d:'Win level 1 in je eerste poging ooit',                   secret:false},
+  {id:'honderduit',  e:'💯',n:'Honderd Uit',          d:'Bereik combo 28 in level 7, 8, 9 of 10',                 secret:false},
+  {id:'bonusjager',  e:'🎁',n:'Bonusjager',           d:'Gebruik de bonuskaart in 10 verschillende levels',        secret:false},
+  {id:'hardloper',   e:'🦵',n:'Hardloper',            d:'Win 3 levels elk binnen 45 seconden',                    secret:false},
+  {id:'kaartenstorm',e:'🌀',n:'Kaartenstorm',         d:'Speel 50 kaarten in 1 level',                            secret:false},
+  {id:'drievoud',    e:'🔱',n:'Drievoud',             d:'Leeg alle 3 piramides 3x in totaal',                     secret:false},
+  {id:'winnaar7',    e:'7️⃣',n:'Gelukkig 7',           d:'Win 7 levels op rij zonder game over',                   secret:false},
+  {id:'openkaarten', e:'📖',n:'Open Boek',            d:'Speel 500 open kaarten totaal',                          secret:false},
+  {id:'piramidegod', e:'🔺',n:'Piramide God',         d:'Leeg de piramide in level 10 helemaal',                  secret:false},
+  // ── EXTRA GEHEIM ──
+  {id:'geheimjager', e:'🔍',n:'Geheimjager',         d:'???',                                                    secret:true},
+  {id:'tijdgeest',   e:'⏰',n:'Tijdgeest',            d:'???',                                                    secret:true},
+  {id:'stenen',      e:'🪨',n:'Stenen',               d:'???',                                                    secret:true},
+  {id:'duister',     e:'🌑',n:'Duister',              d:'???',                                                    secret:true},
+  {id:'goud',        e:'🟡',n:'Goud',                 d:'???',                                                    secret:true},
+  {id:'vlam',        e:'🕯',n:'Vlam',                 d:'???',                                                    secret:true},
+  {id:'schaduw',     e:'🌒',n:'Schaduw',              d:'???',                                                    secret:true},
+  {id:'steen',       e:'🗿',n:'Oude Steen',           d:'???',                                                    secret:true},
+  {id:'architect',   e:'📐',n:'Architect',            d:'???',                                                    secret:true},
+  {id:'eeuwig',      e:'♾',n:'Eeuwig',               d:'???',                                                    secret:true},
 ];
 
-let _ach={combo:0,fouten:0,getrokken:0,rij:0,winsOpRij:0,sessieFail:false,pyrLeeg:{},bonusGebruikt:false,openKaartenVoorTrek:0,trekDitLevel:0,foutloosWins:0,mpWinsOpRij:0,sessionStart:Date.now(),kaartTeller:0,pyrLeegLevels:new Set(),levelGewonnen:new Set(),eersteSpel:false};
+let _ach={combo:0,fouten:0,getrokken:0,rij:0,winsOpRij:0,sessieFail:false,pyrLeeg:{},bonusGebruikt:false,openKaartenVoorTrek:0,trekDitLevel:0,foutloosWins:0,mpWinsOpRij:0,sessionStart:Date.now(),kaartTeller:0,pyrLeegLevels:new Set(),levelGewonnen:new Set(),eersteSpel:false,bonusAangeraakt:false,allPyrThisLevel:false,mpWins:0,mpGames:0};
 
 function _achLoad(){try{return JSON.parse(localStorage.getItem('cr_ach')||'{}');}catch(e){return {};}}
 function _achSave(d){try{localStorage.setItem('cr_ach',JSON.stringify(d));}catch(e){}}
@@ -4867,18 +5085,27 @@ function unlockAch(id){
   setTimeout(()=>{pop.classList.remove('show');setTimeout(()=>pop.remove(),400);},2800);
 }
 
-function achResetLevel(){_ach.combo=0;_ach.fouten=0;_ach.getrokken=0;_ach.rij=0;_ach.bonusGebruikt=false;_ach.openKaartenVoorTrek=0;_ach.trekDitLevel=0;_ach.trekGeweest=false;}
+function achResetLevel(){_ach.combo=0;_ach.fouten=0;_ach.getrokken=0;_ach.rij=0;_ach.bonusGebruikt=false;_ach.bonusAangeraakt=false;_ach.openKaartenVoorTrek=0;_ach.trekDitLevel=0;_ach.trekGeweest=false;_ach.allPyrThisLevel=false;}
 
 function achOnCombo(c){
   if(c>_ach.combo)_ach.combo=c;
   _ach.rij++;
   _ach.kaartTeller++;
   if(!_ach.trekGeweest)_ach.openKaartenVoorTrek++;
+  if(_ach.combo>=5)unlockAch('combo5');
+  if(_ach.combo>=10)unlockAch('combo10');
+  if(_ach.combo>=15)unlockAch('combo15');
   if(_ach.combo>=20)unlockAch('pyromaan');
+  if(_ach.combo>=25)unlockAch('combo25');
+  if(_ach.combo>=28)unlockAch('combo28');
   if(_ach.rij>=15)unlockAch('waarzegger');
-  // Veteraan
-  const stats=_achStats();stats.kaarten=(stats.kaarten||0)+1;_achSaveStats(stats);
+  if(_ach.rij>=20)unlockAch('onverstoord');
+  if(_ach.rij>=30)unlockAch('kaartenregen');
+  const stats=_achStats();
+  stats.kaarten=(stats.kaarten||0)+1;_achSaveStats(stats);
   if(stats.kaarten>=1000)unlockAch('veteraan');
+  if(stats.kaarten>=5000)unlockAch('kaartenmolen');
+  if(stats.kaarten>=10000)unlockAch('kaartfanaat');
 }
 function achOnFout(){_ach.fouten++;_ach.rij=0;_ach.foutloosWins=0;}
 function achOnTrek(){
@@ -4888,52 +5115,137 @@ function achOnTrek(){
 function achOnPyrLeeg(lvl,pi){
   if(!_ach.pyrLeeg[lvl])_ach.pyrLeeg[lvl]=[];
   if(!_ach.pyrLeeg[lvl].includes(pi))_ach.pyrLeeg[lvl].push(pi);
-  if([1,2,3].every(l=>_ach.pyrLeeg[l]&&_ach.pyrLeeg[l].length===3))unlockAch('archeoloog');
+  if(_ach.pyrLeeg[lvl].length===3)_ach.allPyrThisLevel=true;
 }
 function achOnWin(lvl,timeLeft,tot){
   _ach.winsOpRij++;
   const elapsed=(typeof LEVEL_TIME!=='undefined'?LEVEL_TIME[lvl]:120)-timeLeft;
+
+  // Speed
   if(elapsed<=30)unlockAch('speedster');
+  const maxTime=typeof LEVEL_TIME!=='undefined'?LEVEL_TIME[lvl]:120;
+  if(timeLeft>=maxTime-30)unlockAch('flits');
+  if(timeLeft<=5&&timeLeft>0)unlockAch('haast');
+  if(timeLeft<=1&&timeLeft>0)unlockAch('reddertje');
+  if(lvl===10&&elapsed<=60)unlockAch('sprint');
+  if(lvl===10&&elapsed<=45)unlockAch('lvl10speed');
+
+  // Foutloos
   if(_ach.fouten===0)unlockAch('gladiator');
-  if(_ach.winsOpRij>=5)unlockAch('sharp');
-  if(lvl>=10)unlockAch('ontdekker');
-  if(lvl===10&&!_ach.sessieFail)unlockAch('meester');
-  if(tot>=13000000)unlockAch('legenda');
+  if(_ach.fouten===0&&_ach.trekDitLevel===0)unlockAch('perfectrun');
+  if(_ach.fouten===0&&lvl===10)unlockAch('lvl10flawless');
+  if(_ach.fouten===0&&lvl===1)unlockAch('lvl1perfect');
+  if(_ach.fouten===0){
+    _ach.foutloosWins=(_ach.foutloosWins||0)+1;
+    if(_ach.foutloosWins>=3)unlockAch('fokus');
+    if(_ach.foutloosWins>=5)unlockAch('chirurg');
+  } else { _ach.foutloosWins=0; }
   if(_ach.fouten>=10)unlockAch('pechvogel');
-  // Nieuwe achievements
+  if(_ach.fouten>=10&&lvl>0)unlockAch('fouten10');
+
+  // Win streaks
+  if(_ach.winsOpRij>=5)unlockAch('sharp');
+  if(_ach.winsOpRij>=7)unlockAch('winnaar7');
+  if(_ach.winsOpRij>=10)unlockAch('winstreak10');
+
+  // Progressie levels
+  if(lvl>=5)unlockAch('lvl5win');
+  if(lvl>=7)unlockAch('lvl7win');
+  if(lvl>=10){unlockAch('ontdekker');unlockAch('lvl10first');}
+  if(lvl===10&&!_ach.sessieFail)unlockAch('meester');
+
+  // Score
+  if(tot>=1000000)unlockAch('miljoenair');
+  if(tot>=5000000)unlockAch('grootverdiener');
+  if(tot>=13000000)unlockAch('legenda');
+
+  // Speelstijl
   if(!_ach.bonusGebruikt)unlockAch('ongenaakbaar');
   if(_ach.openKaartenVoorTrek>=10&&!_ach.trekGeweest)unlockAch('tsunami');
-  if(_ach.fouten===0){_ach.foutloosWins=(_ach.foutloosWins||0)+1;if(_ach.foutloosWins>=3)unlockAch('fokus');}else{_ach.foutloosWins=0;}
-  if(timeLeft<=5&&timeLeft>0)unlockAch('comeback');
-  if(_ach.fouten===0&&_ach.trekDitLevel===0)unlockAch('perfectrun');
+  if(_ach.trekDitLevel===0)unlockAch('minTrekker');
+  if(_ach.trekDitLevel>=20)unlockAch('trekverslaafd');
+  if(_ach.allPyrThisLevel)unlockAch('allPyramids');
+
+  // Piramide bonus 3x
+  if(_ach.pyrLeeg[lvl]&&_ach.pyrLeeg[lvl].length===3)unlockAch('bonusking');
+
+  // Level perfect (geen fout en geen trekken)
+  if(_ach.fouten===0&&_ach.trekDitLevel===0&&lvl===10)unlockAch('perfect10');
+
   // Progressie stats
   const stats=_achStats();
   stats.levelsGewonnen=(stats.levelsGewonnen||0)+1;
   if(!stats.levelSet)stats.levelSet={};
   stats.levelSet[lvl]=true;
+  if(!stats.levelWins)stats.levelWins={};
+  stats.levelWins[lvl]=(stats.levelWins[lvl]||0)+1;
+
   if(!stats.eersteWin){stats.eersteWin=true;unlockAch('geluksvogel');}
   if(stats.levelsGewonnen>=25)unlockAch('nachtbraker');
-  // Geslaagd: alle 10 levels gewonnen
+  if(stats.levelsGewonnen>=100)unlockAch('win100');
+  if(stats.levelsGewonnen>=250)unlockAch('win250');
+
+  // Geslaagd
   if(Object.keys(stats.levelSet).length>=10)unlockAch('geslaagd');
-  // Archeoloog piramides per level bijhouden
+
+  // Level grinder: elk level 5x gewonnen
+  if(Object.keys(stats.levelWins).length>=10&&Object.values(stats.levelWins).every(v=>v>=5))unlockAch('levelgrinder');
+
+  // Piramide levels
   if(_ach.pyrLeeg[lvl]&&_ach.pyrLeeg[lvl].length===3){
     if(!stats.pyrLeegLevels)stats.pyrLeegLevels={};
     stats.pyrLeegLevels[lvl]=true;
-    if(Object.keys(stats.pyrLeegLevels).length>=5)unlockAch('bouwheer');
+    const pyrCount=Object.keys(stats.pyrLeegLevels).length;
+    if(pyrCount>=5)unlockAch('bouwheer');
+    if(pyrCount>=10)unlockAch('piramideslooper');
   }
-  // Marathonloper
+
+  // Archeoloog: alle piramides in level 1,2,3
+  if([1,2,3].every(l=>_ach.pyrLeeg[l]&&_ach.pyrLeeg[l].length===3))unlockAch('archeoloog');
+
+  // Tijdbonus check (tijdbonus = timeLeft * basis * 0.5)
+  const basis=typeof getBasis==='function'?getBasis():4400;
+  const tijdbonus=Math.round(timeLeft*basis*0.5);
+  if(tijdbonus>=100000)unlockAch('tijdbonus100');
+
+  // Fouten stats
+  if(!stats.totalFouten)stats.totalFouten=0;
+  stats.totalFouten+=_ach.fouten;
+  if(stats.totalFouten>=50)unlockAch('fouten50lvl');
+
+  // Bonusvrij
+  if(!stats.bonusvrij)stats.bonusvrij=0;
+  if(!_ach.bonusAangeraakt)stats.bonusvrij++;
+  else stats.bonusvrij=0;
+  if(stats.bonusvrij>=5)unlockAch('bonusvrij');
+
+  // Marathonloper: 30+ min in 1 sessie
   const minuten=(Date.now()-_ach.sessionStart)/60000;
   if(minuten>=30)unlockAch('marathonloper');
-  // Trekverslaafd: 10x getrokken maar toch gewonnen
-  if(_ach.trekDitLevel>=10)unlockAch('trekverslaafd');
+
+  // Geheime achievements
+  if(timeLeft===0)unlockAch('ghostplayer'); // precies op nul
+  if(_ach.combo>=28&&lvl>=7)unlockAch('runekenner'); // combo 28 op hoog level
+  if(tot>=6666666)unlockAch('nachtzwever'); // satan score
+  if(_ach.trekDitLevel===7&&_ach.fouten===0)unlockAch('kaartgod'); // 7 trekken foutloos
+  if(elapsed<=10)unlockAch('tijdreiziger'); // level in <10 sec
+  if(_ach.fouten===0&&_ach.trekDitLevel===0&&_ach.combo>=20)unlockAch('zenmaster');
+  if(lvl===10&&stats.levelsGewonnen>=100)unlockAch('orakel');
+
   _achSaveStats(stats);
 }
 function achOnGameOver(){
   _ach.sessieFail=true;_ach.winsOpRij=0;
-  const s=_achStats();s.games=(s.games||0)+1;_achSaveStats(s);
+  const s=_achStats();
+  s.games=(s.games||0)+1;
+  s.gameOvers=(s.gameOvers||0)+1;
+  _achSaveStats(s);
   if(s.games>=100)unlockAch('doorzetter1');
   if(s.games>=250)unlockAch('doorzetter2');
   if(s.games>=500)unlockAch('doorzetter3');
+  if(s.games>=1000)unlockAch('doorzetter4');
+  if(s.gameOvers>=100)unlockAch('ruines');
+  if(s.gameOvers>=50)unlockAch('kaartentempel');
 }
 function achOnGameStart(){
   const s=_achStats();s.games=(s.games||0)+1;_achSaveStats(s);
@@ -4943,6 +5255,22 @@ function achOnGameStart(){
   achResetLevel();
 }
 function achCheckWereldtop(rank){if(rank===1)unlockAch('wereldtop');}
+function achOnMpStart(){
+  _ach.mpGames++;
+  const s=_achStats();s.mpGames=(s.mpGames||0)+1;_achSaveStats(s);
+  unlockAch('sociaal');
+  if(s.mpGames>=25)unlockAch('mpmarathon');
+}
+function achOnMpWin(){
+  _ach.mpWins++;
+  const s=_achStats();s.mpWins=(s.mpWins||0)+1;s.mpWinsOpRij=(s.mpWinsOpRij||0)+1;_achSaveStats(s);
+  unlockAch('rivaal');
+  if(s.mpWinsOpRij>=3)unlockAch('kampioen');
+  if(s.mpWins>=10)unlockAch('mpmeester');
+}
+function achOnMpLose(){
+  const s=_achStats();s.mpWinsOpRij=0;_achSaveStats(s);
+}
 
 function openAchievements(){
   const data=_achLoad();
