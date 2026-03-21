@@ -1118,51 +1118,164 @@ function buildChain(start,pool,maxLen){
   }return chain;
 }
 
-// ── DEAL POOL SYSTEEM ──────────────────────────────────────────
-// Genereert 20 gevalideerde deals per level bij opstarten (lichtgewicht).
-// Validatie via snelle heuristiek — geen zware backtracking.
+// ── DEAL POOL SYSTEEM (Web Worker) ─────────────────────────────
+// De worker genereert + valideert deals in een aparte thread.
+// De hoofdthread (game) wordt nooit geblokkeerd.
 
 const _dealPool={};
 let _dealPoolReady=false;
 
-function _canSolveDeal(sd,open10,pyrCards,drawArr){
-  // Snelle heuristiek: check of elke piramidekaart een speelbare discard
-  // beschikbaar heeft ergens in de totale pool (open + trek + andere pyr).
-  // Vangt ~99% van onoplosbare deals af, zonder UI te blokkeren.
-  const allRanks=new Set([...open10,...drawArr,...pyrCards].map(c=>c.rank));
-  allRanks.add(sd.rank);
-  const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-  const rv=r=>RANKS.indexOf(r);
-  for(const pc of pyrCards){
-    const r1=RANKS[(rv(pc.rank)+1)%13];
-    const r2=RANKS[(rv(pc.rank)+12)%13];
-    if(!allRanks.has(r1)&&!allRanks.has(r2)) return false;
-  }
-  return true;
+function _startDealWorker(){
+  // Alle benodigde logica als string — wordt inline als Blob Worker geladen.
+  // Zo is geen apart .js bestand nodig.
+  const workerCode=`
+const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const SUITS=['\u2660','\u2665','\u2666','\u2663'];
+const rv=r=>RANKS.indexOf(r);
+function canPlay(a,b){if(!b)return false;const d=Math.abs(rv(a.rank)-rv(b.rank));return d===1||d===12;}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+function buildChain(start,pool,maxLen){
+  const chain=[];let cur=start;const used=new Set([cur.rank+cur.suit]);
+  for(let i=0;i<maxLen;i++){
+    const next=pool.find(c=>{if(used.has(c.rank+c.suit))return false;const d=Math.abs(rv(c.rank)-rv(cur.rank));return d===1||d===12;});
+    if(!next)break;chain.push(next);used.add(next.rank+next.suit);cur=next;
+  }return chain;
 }
 
-function _buildDealPool(){
-  // Bouw pool per level met kleine batches en yielding zodat UI niet blokkeert.
+function generateDeal(level){
+  const all=[];for(const s of SUITS)for(const r of RANKS)all.push({rank:r,suit:s});shuffle(all);
+  const startDiscard=all.pop();
+  const pool=[...all];
+  const chainChance=level<=3?0.35:level<=6?0.55:0.75;
+  const chainMaxLen=level<=3?3:level<=6?4:8;
+  const chainMaxSlice=level<=3?3:level<=6?4:6;
+  const useChain=Math.random()<chainChance;
+  let open10,remaining;
+  if(useChain){
+    const chain=buildChain(startDiscard,pool,chainMaxLen);
+    const chainSet=new Set(chain.map(c=>c.rank+c.suit));
+    remaining=pool.filter(c=>!chainSet.has(c.rank+c.suit));
+    const chainSlice=chain.slice(0,Math.min(chain.length,chainMaxSlice));
+    const fillers=remaining.splice(0,10-chainSlice.length);
+    open10=[...chainSlice,...shuffle(fillers)].slice(0,10);
+  } else {
+    remaining=[...pool];open10=remaining.splice(0,10);shuffle(open10);
+  }
+  const pyrChainChance=0.40;
+  const pyrChainLen=2+Math.floor(Math.random()*3);
+  let pyrCards=remaining.splice(0,18);
+  for(let pi=0;pi<3;pi++){
+    if(Math.random()>pyrChainChance)continue;
+    const baseStart=pi*6;
+    const anchor=open10[Math.floor(Math.random()*open10.length)]||startDiscard;
+    const chainPool=remaining.slice();
+    const miniChain=buildChain(anchor,chainPool,pyrChainLen);
+    if(miniChain.length<2)continue;
+    const chainUsed=new Set(miniChain.map(c=>c.rank+c.suit));
+    pyrCards=pyrCards.filter(c=>!chainUsed.has(c.rank+c.suit));
+    while(pyrCards.length<18&&remaining.length){pyrCards.push(remaining.shift());}
+    const topCards=pyrCards.splice(0,3);
+    const bottomChain=miniChain.slice(0,3);
+    while(bottomChain.length<3&&pyrCards.length)bottomChain.push(pyrCards.shift());
+    const pyrBlock=[...topCards,...shuffle(bottomChain)];
+    pyrCards.splice(baseStart,0,...pyrBlock);
+    pyrCards=pyrCards.slice(0,18);
+  }
+  const drawSizes=[0,23,23,22,22,21,20,19,18,17,16];
+  const drawArr=shuffle(remaining).slice(0,drawSizes[level]||16);
+  return{startDiscard,open10,pyrCards,drawArr};
+}
+
+function canSolveDeal(sd,open10,pyrCards,drawArr){
+  // Backtracking solver — draait veilig in worker thread.
+  const pyrStruct=[];let ci=0;
+  for(let pi=0;pi<3;pi++){const p=[];for(let row=0;row<3;row++){const r=[];for(let col=0;col<=row;col++){r.push({...pyrCards[ci],idx:ci});ci++;}p.push(r);}pyrStruct.push(p);}
+  const seen=new Set();
+  function isExp(pm,pi,row){return row===0||pyrStruct[pi][row-1].every(c=>pm&(1<<c.idx));}
+  function solve(om,pm,di,disc,bonus,depth){
+    if(depth>400)return false;
+    const key=om+'|'+pm+'|'+di+'|'+disc.rank+'|'+(bonus?bonus.rank:'X');
+    if(seen.has(key))return false;seen.add(key);
+    if(pm===(1<<18)-1&&om===(1<<10)-1)return true;
+    const moves=[];
+    for(let i=0;i<10;i++){if(om&(1<<i))continue;const c=open10[i];if(canPlay(c,disc))moves.push({t:'o',i,tgt:'m'});else if(bonus&&canPlay(c,bonus))moves.push({t:'o',i,tgt:'b'});}
+    for(let pi=0;pi<3;pi++)for(let row=0;row<3;row++)for(let col=0;col<pyrStruct[pi][row].length;col++){const c=pyrStruct[pi][row][col];if(pm&(1<<c.idx)||!isExp(pm,pi,row))continue;if(canPlay(c,disc))moves.push({t:'p',c,tgt:'m'});else if(bonus&&canPlay(c,bonus))moves.push({t:'p',c,tgt:'b'});}
+    if(di<drawArr.length)moves.push({t:'d'});
+    for(const m of moves){
+      if(m.t==='d'){if(solve(om,pm,di+1,drawArr[di],null,depth+1))return true;}
+      else if(m.t==='o'){const c=open10[m.i];if(solve(om|(1<<m.i),pm,di,m.tgt==='m'?c:disc,m.tgt==='b'?c:bonus,depth+1))return true;}
+      else{const c=m.c;if(solve(om,pm|(1<<c.idx),di,m.tgt==='m'?c:disc,m.tgt==='b'?c:bonus,depth+1))return true;}
+    }
+    return false;
+  }
+  return solve(0,0,0,sd,null,0);
+}
+
+// Genereer 20 gevalideerde deals per level en stuur ze terug
+const POOL_SIZE=20;
+for(let level=1;level<=10;level++){
+  const deals=[];
+  let attempts=0;
+  while(deals.length<POOL_SIZE&&attempts<500){
+    attempts++;
+    const d=generateDeal(level);
+    if(canSolveDeal(d.startDiscard,d.open10,d.pyrCards,d.drawArr)){
+      deals.push(d);
+    }
+  }
+  // Stuur klaar deals terug naar hoofdthread zodra level klaar is
+  postMessage({level,deals});
+}
+postMessage({done:true});
+`;
+
+  try{
+    const blob=new Blob([workerCode],{type:'application/javascript'});
+    const url=URL.createObjectURL(blob);
+    const worker=new Worker(url);
+    worker.onmessage=e=>{
+      if(e.data.done){
+        _dealPoolReady=true;
+        URL.revokeObjectURL(url);
+        worker.terminate();
+      } else {
+        _dealPool[e.data.level]=e.data.deals;
+      }
+    };
+    worker.onerror=()=>{
+      // Worker mislukt (bijv. strikt CSP) — val terug op lichtgewicht pool
+      _buildDealPoolFallback();
+      URL.revokeObjectURL(url);
+    };
+  } catch(e){
+    // Geen Worker support — val terug
+    _buildDealPoolFallback();
+  }
+}
+
+function _buildDealPoolFallback(){
+  // Lichtgewicht fallback zonder worker: heuristiek validatie, kleine batches
   const POOL_SIZE=20;
   let level=1;
   function doBatch(){
-    if(!_dealPool[level]) _dealPool[level]=[];
-    // Genereer max 5 deals per batch om de UI vrij te houden
+    if(!_dealPool[level])_dealPool[level]=[];
     let count=0;
     while(_dealPool[level].length<POOL_SIZE&&count<5){
       count++;
       const d=generateDeal(level);
-      if(_canSolveDeal(d.startDiscard,d.open10,d.pyrCards,d.drawArr)){
-        _dealPool[level].push(d);
+      const allRanks=new Set([...d.open10,...d.drawArr,...d.pyrCards].map(c=>c.rank));
+      allRanks.add(d.startDiscard.rank);
+      let ok=true;
+      for(const pc of d.pyrCards){
+        const r1=RANKS[(RANKS.indexOf(pc.rank)+1)%13];
+        const r2=RANKS[(RANKS.indexOf(pc.rank)+12)%13];
+        if(!allRanks.has(r1)&&!allRanks.has(r2)){ok=false;break;}
       }
+      if(ok)_dealPool[level].push(d);
     }
-    if(_dealPool[level].length<POOL_SIZE){
-      setTimeout(doBatch,0); // nog niet klaar met dit level
-    } else {
-      level++;
-      if(level<=10) setTimeout(doBatch,0);
-      else _dealPoolReady=true;
-    }
+    if(_dealPool[level].length<POOL_SIZE)setTimeout(doBatch,0);
+    else{level++;if(level<=10)setTimeout(doBatch,0);else _dealPoolReady=true;}
   }
   setTimeout(doBatch,0);
 }
@@ -4940,7 +5053,7 @@ function _mpStopTips(){clearInterval(_mpTipInt);_mpTipInt=null;}
 // ── END MP WAIT TIPS ──────────────────────────────────────────
 
 // ── DEAL POOL INITIALISATIE ────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{ _buildDealPool(); });
+document.addEventListener('DOMContentLoaded',()=>{ _startDealWorker(); });
 
 // Bewaakt de MP "Aanmaken" knop: wacht tot pool klaar is (duurt ~250ms).
 function _mpWaitForPool(cb){
