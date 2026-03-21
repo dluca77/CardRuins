@@ -1946,22 +1946,12 @@ function endLevel(win){
     }
   }
 
-  const _doShowResult=()=>showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);
-  const _withHighlight=(cb)=>{
-    // Alleen highlight bij level 10 win
-    if(win&&currentLevel===10){
-      showGameHighlight(cb);
-    } else {
-      cb();
-    }
-  };
-
   if(win && allCleared){
-    lightningAnimation(()=>{sfxWin();_withHighlight(_doShowResult);});
+    lightningAnimation(()=>{sfxWin();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);});
   } else if(win){
-    sfxWin();_withHighlight(_doShowResult);
+    sfxWin();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);
   } else {
-    sfxLose();_doShowResult();
+    sfxLose();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);
   }
 }
 
@@ -1975,136 +1965,83 @@ function _makeHLCard(c,delay=0,glow=false){
   return div;
 }
 
-function showGameHighlight(onDone){
-  try{
-    const hl=document.getElementById('gameHighlight');
-    if(!hl){onDone();return;}
-
-    const log=_gameLog||{bestCombo:0,bestComboRun:[],fouten:0,foutCards:{}};
-
-    // Bepaal wat te tonen
-    let worstCount=0;
-    for(const count of Object.values(log.foutCards||{})){
-      if(count>worstCount)worstCount=count;
-    }
-
-    const hasCombo=log.bestCombo>=3&&(log.bestComboRun||[]).length>=2;
-    const hasTip=worstCount>=2;
-
-    if(!hasCombo&&!hasTip){onDone();return;} // Niks te tonen
-
-    // Reset UI
-    document.getElementById('hlCards').innerHTML='';
-    document.getElementById('hlComboNum').style.display='none';
-    document.getElementById('hlTip').style.display='none';
-    document.getElementById('hlBadge').textContent='';
-    document.getElementById('hlTitle').textContent='';
-    document.getElementById('hlSub').textContent='';
-
-    hl.classList.add('show');
-
-    if(hasCombo){
-      document.getElementById('hlBadge').textContent='✨ JOUW BESTE COMBO';
-      document.getElementById('hlTitle').innerHTML=`<span style="color:#ffd700">${log.bestCombo}×</span> COMBO`;
-      const run=(log.bestComboRun||[]).slice(0,8);
-      const totalPts=run.reduce((a,m)=>a+(m.pts||0),0);
-      document.getElementById('hlSub').textContent=`${run.length} kaarten · ${totalPts.toLocaleString('nl-NL')} punten`;
-
-      const cardsEl=document.getElementById('hlCards');
-      run.forEach((m,i)=>{
-        const col=isRed(m.suit)?'red':'blk';
-        const div=document.createElement('div');
-        div.className='hl-card '+col+' combo-card';
-        div.style.cssText=`opacity:0;animation:hlCardPop .35s cubic-bezier(.34,1.4,.64,1) ${0.05+i*0.1}s forwards`;
-        div.innerHTML=`<span class="hl-card-suit">${m.rank}<br>${m.suit}</span><span class="hl-card-center">${m.suit}</span><span class="hl-card-suit-bot">${m.rank}<br>${m.suit}</span>`;
-        cardsEl.appendChild(div);
-      });
-
-      setTimeout(()=>{
-        const cn=document.getElementById('hlComboNum');
-        cn.textContent='×'+log.bestCombo;
-        cn.style.display='block';
-        cn.style.animation='none';void cn.offsetHeight;
-        cn.style.animation='hlSlideUp .4s ease forwards';
-      }, 200+run.length*100);
-
-    } else {
-      document.getElementById('hlBadge').textContent='💡 TIP VOOR JOU';
-      document.getElementById('hlTitle').textContent='KIJK GOED VOOR JE KLIKT';
-      const tip=document.getElementById('hlTip');
-      tip.style.display='block';
-      tip.innerHTML=`Je klikte <b style="color:#ff8080">${worstCount}×</b> op een kaart die niet aansloot.<br><br>
-        <b style="color:#80c8ff">Tip:</b> een kaart speelt alleen als de waarde precies 1 hoger of lager is dan de aflegstapel. Aas en Koning sluiten op elkaar aan.`;
-    }
-
-    // Countdown 5 seconden, klik om te skippen
-    let elapsed=0;
-    const total=4500;
-    const timerCircle=document.getElementById('hlTimer');
-    const timerIv=setInterval(()=>{
-      elapsed+=50;
-      const pct=Math.min(elapsed/total,1);
-      timerCircle.setAttribute('stroke-dashoffset',pct*100);
-      if(elapsed>=total){
-        clearInterval(timerIv);
-        hl.classList.remove('show');
-        onDone();
-      }
-    },50);
-
-    const skipOnce=()=>{
-      clearInterval(timerIv);
-      hl.classList.remove('show');
-      hl.removeEventListener('click',skipOnce);
-      onDone();
-    };
-    hl.addEventListener('click',skipOnce);
-
-  }catch(e){
-    console.warn('highlight error:',e);
-    onDone(); // Altijd doorgaan ook bij error
-  }
-}
 // ── EINDE GAME HIGHLIGHT ─────────────────────────────────────────
 
-function _triggerHSPopup(myScore){
-  // Altijd naam modal direct tonen — geen wachttijd
-  // Supabase check bepaalt of de popup daarna ook echt verschijnt
-  let _modalShown=false;
-  let _modalName=null;
-  let _modalDone=false;
 
-  const tryShow=()=>{
-    if(_modalDone&&_modalName!==null){
-      _showHSPopup(myScore,_modalName);
-    }
-  };
-
-  // Start naam modal direct
-  _showNameModalForHS(name=>{
-    _modalName=name;
-    _modalDone=true;
-    tryShow();
-  });
-
-  // Supabase check parallel — als niet in top4, sluit de popup meteen weer
-  const checkTop4=()=>{
-    if(_top4Cache){
-      const inTop4=_top4Cache.scores.length<4||myScore>_top4Cache.scores[_top4Cache.scores.length-1];
-      if(!inTop4){document.getElementById('nameModal').classList.remove('show');}
-      else tryShow();
+// ── HIGHSCORE FLOW — simpel en direct ──────────────────────────
+async function _doHSFlow(myScore){
+  // Stap 1: check of in top4 (gebruik cache als beschikbaar)
+  let scores=[];
+  try{
+    if(_top4Cache&&_top4Cache.scores){
+      scores=_top4Cache.scores;
     } else {
-      _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4)
-        .then(({data})=>{
-          const scores=(data||[]).map(r=>r.score);
-          const inTop4=scores.length<4||myScore>scores[scores.length-1];
-          if(!inTop4){document.getElementById('nameModal').classList.remove('show');}
-          else tryShow();
-        }).catch(()=>tryShow());
+      const{data}=await _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4);
+      scores=(data||[]).map(r=>r.score);
     }
-  };
-  checkTop4();
+  }catch(e){}
+
+  const inTop4=scores.length<4||myScore>scores[scores.length-1];
+  if(!inTop4) return; // Niet in top4, klaar
+
+  // Stap 2: naam vragen
+  const name=await _showNameModal();
+  if(!name||!name.trim()) return;
+  const trimmed=name.trim().substring(0,20);
+  localStorage.setItem('cr_playername',trimmed);
+
+  // Stap 3: opslaan
+  try{
+    await _supabase.from('highscores').insert({name:trimmed,score:myScore});
+    const{data:all}=await _supabase.from('highscores').select('id').order('score',{ascending:false});
+    if(all&&all.length>4) for(const row of all.slice(4)) await _supabase.from('highscores').delete().eq('id',row.id);
+  }catch(e){console.warn('submit failed',e);}
+
+  // Stap 4: toon popup met ranglijst
+  const popup=document.getElementById('hsPopup');
+  const board=document.getElementById('hspBoard');
+  const rankEl=document.getElementById('hspRank');
+  document.getElementById('hspScore').textContent=myScore.toLocaleString('nl-NL');
+  board.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:10px;font-size:12px">Laden...</div>';
+  rankEl.textContent='';
+  popup.classList.add('show');
+
+  try{
+    const{data}=await _supabase.from('highscores').select('name,score').order('score',{ascending:false}).limit(4);
+    const medals=['🥇','🥈','🥉','🏅'];
+    const rows=data||[];
+    const myIdx=rows.findIndex(r=>r.name===trimmed&&r.score===myScore);
+    if(myIdx===0) rankEl.textContent='🥇 WERELDRECORD!';
+    else if(myIdx>0) rankEl.textContent=`🏆 RANK #${myIdx+1} WERELDWIJD!`;
+
+    board.innerHTML='';
+    rows.forEach((r,i)=>{
+      const isMe=i===myIdx;
+      const row=document.createElement('div');
+      row.className='hsp-row'+(isMe?' me':'');
+      row.style.opacity='0';
+      row.innerHTML=`<span class="hsp-rank">${medals[i]||'#'+(i+1)}</span><span class="hsp-name${isMe?' me':''}">${r.name||'Speler'}</span><span class="hsp-pts${isMe?' me':''}">${r.score.toLocaleString('nl-NL')}</span>`;
+      board.appendChild(row);
+      setTimeout(()=>{
+        row.classList.add('fly-in');
+        if(isMe){
+          // Goudstof burst
+          const rc=row.getBoundingClientRect();
+          const cx=rc.left+rc.width/2,cy=rc.top+rc.height/2;
+          ['#ffd700','#ffaa20','#fff0a0'].forEach((col,k)=>{
+            for(let j=0;j<6;j++){
+              const p=document.createElement('div');
+              const a=Math.random()*Math.PI*2,dist=30+Math.random()*80,dur=0.4+Math.random()*0.4;
+              p.style.cssText=`position:fixed;left:${cx}px;top:${cy}px;width:4px;height:4px;border-radius:50%;background:${col};pointer-events:none;z-index:9999;--cpx:${Math.cos(a)*dist}px;--cpy:${Math.sin(a)*dist}px;animation:comboPart ${dur}s ease-out forwards`;
+              document.body.appendChild(p);setTimeout(()=>p.remove(),dur*1000+100);
+            }
+          });
+        }
+      },200+i*180);
+    });
+  }catch(e){board.innerHTML='<div style="color:rgba(255,80,80,.7);text-align:center;padding:10px;font-size:12px">Kon ranglijst niet laden</div>';}
 }
+// ── EINDE HIGHSCORE FLOW ─────────────────────────────────────────
 
 function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
   const ov=document.getElementById('ovres');ov.classList.add('show');
@@ -2129,22 +2066,23 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
     `<div class="rbk"><span class="rbkl">${l}</span><span class="rbkv" style="color:${v>0?'#ffd070':'rgba(255,180,60,0.3)'}">+${v.toLocaleString('nl-NL')}</span></div>`
   ).join('');
 
-  // Score telt snel op, daarna direct popup op level 10
   const se=document.getElementById('rscore');
   se.innerHTML=`<div id="lvlscr">${prevTotal.toLocaleString('nl-NL')}</div>`;
   const lvlEl=document.getElementById('lvlscr');
   let d=prevTotal;
-  // Sneller aftellen: klaar in ~600ms
   const step=Math.max(1000,Math.ceil((newTotal-prevTotal)/20));
   const thisLevel=currentLevel;
-  const _scoreToCheck=newTotal;
+  const scoreToCheck=newTotal;
 
   const iv=setInterval(()=>{
-    d=Math.min(d+step,_scoreToCheck);
+    d=Math.min(d+step,scoreToCheck);
     lvlEl.textContent=d.toLocaleString('nl-NL');
-    if(d>=_scoreToCheck){
+    if(d>=scoreToCheck){
       clearInterval(iv);
-      if(thisLevel>=10) _triggerHSPopup(_scoreToCheck);
+      // KLAAR MET TELLEN — direct naam modal als level 10 en in top4
+      if(thisLevel===10){
+        _doHSFlow(scoreToCheck);
+      }
     }
   },16);
 
@@ -2152,8 +2090,7 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
   if(currentLevel<10){
     btns.innerHTML+=`<button class="rbtn go" onclick="nextLvl()">LEVEL ${currentLevel+1} ▶</button>`;
   } else {
-    // Eindstand knop — alleen zichtbaar als HS popup niet automatisch opent
-    btns.innerHTML+=`<button class="rbtn go" id="btnEindstand" onclick="showFinalHS()">🏆 EINDSTAND</button>`;
+    btns.innerHTML+=`<button class="rbtn go" onclick="showFinalHS()">🏆 EINDSTAND</button>`;
     btns.innerHTML+=`<button class="rbtn" style="opacity:0.5;cursor:default;border-color:rgba(255,180,0,.3);color:rgba(255,180,0,.6)" onclick="void(0)">🔒 LEVEL 11 — BINNENKORT</button>`;
   }
   btns.innerHTML+=`<button class="rbtn" onclick="confirmRetry()">🔄 OPNIEUW</button>`;
@@ -2230,83 +2167,8 @@ function nextLvl(){
 }
 function retryLvl(){document.getElementById('ovres').classList.remove('show');currentLevel=1;totalScore=0;levelScores=new Array(11).fill(0);initLevel(1);}
 
-async function _submitScoreOnResultScreen(myScore){
-  // Stap 1: naam invoeren
-  const name=await _showNameModal();
-  const trimmed=(name||'').trim().substring(0,20);
 
-  // Stap 2: toon HS popup met live animatie
-  await _showHSPopup(myScore,trimmed);
-}
 
-async function _showHSPopup(myScore,playerName){
-  const popup=document.getElementById('hsPopup');
-  const board=document.getElementById('hspBoard');
-  const rankEl=document.getElementById('hspRank');
-  const scoreEl=document.getElementById('hspScore');
-
-  scoreEl.textContent=myScore.toLocaleString('nl-NL');
-  board.innerHTML='';
-  rankEl.textContent='';
-  popup.classList.add('show');
-
-  // Submit naar Supabase als naam ingevuld
-  if(playerName){
-    localStorage.setItem('cr_playername',playerName);
-    try{
-      await _supabase.from('highscores').insert({name:playerName,score:myScore});
-      const{data:all}=await _supabase.from('highscores').select('id').order('score',{ascending:false});
-      if(all&&all.length>4) for(const row of all.slice(4)) await _supabase.from('highscores').delete().eq('id',row.id);
-    }catch(e){console.warn('Score submit failed:',e);}
-  }
-
-  // Laad de ranglijst en animeer rijen
-  try{
-    const{data}=await _supabase.from('highscores').select('name,score').order('score',{ascending:false}).limit(4);
-    const medals=['🥇','🥈','🥉','🏅'];
-    const rows=data||[];
-    const myIdx=rows.findIndex(r=>r.score===myScore&&(!playerName||r.name===playerName));
-
-    // Rijen één voor één laten invliegen
-    for(let i=0;i<rows.length;i++){
-      const r=rows[i];
-      const isMe=i===myIdx;
-      const row=document.createElement('div');
-      row.className='hsp-row'+(isMe?' me':'');
-      row.style.animationDelay=(i*0.15)+'s';
-      row.innerHTML=`
-        <span class="hsp-rank">${medals[i]||('#'+(i+1))}</span>
-        <span class="hsp-name${isMe?' me':''}">${r.name||'Speler'}</span>
-        <span class="hsp-pts${isMe?' me':''}">${r.score.toLocaleString('nl-NL')}</span>`;
-      board.appendChild(row);
-      // Vlieg-in animatie na korte delay
-      setTimeout(()=>{
-        row.classList.add('fly-in');
-        // Goudstof burst bij eigen rij
-        if(isMe) _burstHSParticles(row);
-      }, 200+i*200);
-    }
-
-    // Rank label
-    if(myIdx===0) rankEl.textContent='🥇 WERELDRECORD!';
-    else if(myIdx>0) rankEl.textContent=`🏆 RANK #${myIdx+1} WERELDWIJD!`;
-
-  }catch(e){console.warn('HS load failed:',e);}
-}
-
-function _burstHSParticles(rowEl){
-  const r=rowEl.getBoundingClientRect();
-  const cx=r.left+r.width/2, cy=r.top+r.height/2;
-  const colors=['#ffd700','#ffaa20','#fff0a0','#ff8800'];
-  for(let i=0;i<20;i++){
-    const p=document.createElement('div');
-    const size=3+Math.random()*4, angle=Math.random()*Math.PI*2, dist=40+Math.random()*80, dur=0.5+Math.random()*0.5;
-    const col=colors[Math.floor(Math.random()*colors.length)];
-    p.style.cssText=`position:fixed;left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;border-radius:50%;background:${col};pointer-events:none;z-index:999;--cpx:${Math.cos(angle)*dist}px;--cpy:${Math.sin(angle)*dist}px;animation:comboPart ${dur}s ease-out forwards`;
-    document.body.appendChild(p);
-    setTimeout(()=>p.remove(),dur*1000+100);
-  }
-}
 
 async function showFinalHS(){
   document.getElementById('ovres').classList.remove('show');
