@@ -1072,6 +1072,7 @@ function generateDeal(level){
   const chainMaxLen = level<=3 ? 3 : level<=6 ? 4 : 8;
   const chainMaxSlice = level<=3 ? 3 : level<=6 ? 4 : 6;
 
+  // ── OPEN RIJ CHAIN ──────────────────────────────────────────
   const useChain=Math.random()<chainChance;
   let open10;
   let remaining;
@@ -1088,24 +1089,40 @@ function generateDeal(level){
     shuffle(open10);
   }
 
+  // ── PYRAMIDE CHAINS ─────────────────────────────────────────
+  // Altijd 40% kans per piramide, ongeacht level
   const pyrChainChance = 0.40;
-  const pyrChainLen = 2 + Math.floor(Math.random()*3);
+  const pyrChainLen = 2 + Math.floor(Math.random()*3); // 2, 3 of 4
+
+  // Trek 18 piramidekaarten, maar probeer per piramide een chain in te bouwen
   let pyrCards = remaining.splice(0,18);
 
+  // Per piramide (6 kaarten): probeer een mini-chain in de onderste rij (3 kaarten)
+  // die aansluit op de open rij discard of een willekeurige startkaart
   for(let pi=0;pi<3;pi++){
     if(Math.random()>pyrChainChance) continue;
+    const baseStart=pi*6; // positie van onderste rij in pyrCards array
+    // Probeer chain te bouwen vanuit een anchor (open rij discard of laatste open kaart)
     const anchor=open10[Math.floor(Math.random()*open10.length)]||startDiscard;
-    const chainPool=remaining.slice();
+    const chainPool=remaining.slice(); // gebruik resterende kaarten als alternatief
     const miniChain=buildChain(anchor,chainPool,pyrChainLen);
-    if(miniChain.length<2) continue;
+    if(miniChain.length<2) continue; // niet genoeg voor een zinvolle chain
+
+    // Vervang kaarten in de onderste rij van deze piramide door de chain kaarten
     const chainUsed=new Set(miniChain.map(c=>c.rank+c.suit));
+    // Verwijder chain kaarten uit pyrCards en voeg ze toe op de juiste plek
     pyrCards=pyrCards.filter(c=>!chainUsed.has(c.rank+c.suit));
+    // Vul aan met extra kaarten uit remaining als nodig
     while(pyrCards.length<18&&remaining.length){pyrCards.push(remaining.shift());}
-    const topCards=pyrCards.splice(0,3);
+
+    // Bouw nieuwe set van 6 piramidekaarten: chain in onderste rij (0,1,2), rest random
+    const topCards=pyrCards.splice(0,3); // top 3 van deze piramide
     const bottomChain=miniChain.slice(0,3);
+    // Vul aan tot 3 als chain korter is
     while(bottomChain.length<3&&pyrCards.length) bottomChain.push(pyrCards.shift());
+    // Zet de chain kaarten terug op de juiste positie (onderste rij = indices 3,4,5 in blok van 6)
     const pyrBlock=[...topCards,...shuffle(bottomChain)];
-    pyrCards.splice(pi*6,0,...pyrBlock);
+    pyrCards.splice(baseStart,0,...pyrBlock);
     pyrCards=pyrCards.slice(0,18);
   }
 
@@ -1170,6 +1187,7 @@ function generateDeal(level){
   let pyrCards=remaining.splice(0,18);
   for(let pi=0;pi<3;pi++){
     if(Math.random()>pyrChainChance)continue;
+    const baseStart=pi*6;
     const anchor=open10[Math.floor(Math.random()*open10.length)]||startDiscard;
     const chainPool=remaining.slice();
     const miniChain=buildChain(anchor,chainPool,pyrChainLen);
@@ -1181,7 +1199,7 @@ function generateDeal(level){
     const bottomChain=miniChain.slice(0,3);
     while(bottomChain.length<3&&pyrCards.length)bottomChain.push(pyrCards.shift());
     const pyrBlock=[...topCards,...shuffle(bottomChain)];
-    pyrCards.splice(pi*6,0,...pyrBlock);
+    pyrCards.splice(baseStart,0,...pyrBlock);
     pyrCards=pyrCards.slice(0,18);
   }
   const drawSizes=[0,23,23,22,22,21,20,19,18,17,16];
