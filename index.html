@@ -1064,15 +1064,25 @@ function confirmRetry(){
 }
 
 function generateDeal(level){
-  const all=[];for(const s of SUITS)for(const r of RANKS)all.push({rank:r,suit:s});
-  shuffle(all);
-  const startDiscard=all.pop();
   const drawSizes=[0,23,23,22,22,21,20,19,18,17,16];
   const drawSize=drawSizes[level]||16;
-  // Verdeel de resterende 51 kaarten eerlijk
-  const open10=all.splice(0,10);
-  const pyrCards=all.splice(0,18);
-  const drawArr=all.splice(0,drawSize);
+  let open10,pyrCards,drawArr,startDiscard;
+  // Hershuffle als de open rij toevallig te uniform is (zelfde suit of te sequentieel)
+  let attempts=0;
+  do{
+    const all=[];for(const s of SUITS)for(const r of RANKS)all.push({rank:r,suit:s});
+    shuffle(all);
+    startDiscard=all.pop();
+    open10=all.splice(0,10);
+    pyrCards=all.splice(0,18);
+    drawArr=all.splice(0,drawSize);
+    attempts++;
+    // Check: niet meer dan 5 van dezelfde suit in de open rij
+    const suitCount={};
+    for(const c of open10) suitCount[c.suit]=(suitCount[c.suit]||0)+1;
+    const maxSuit=Math.max(...Object.values(suitCount));
+    if(maxSuit<=5) break;
+  }while(attempts<5);
   return{startDiscard,open10,pyrCards,drawArr};
 }
 function buildChain(start,pool,maxLen){
@@ -1109,14 +1119,23 @@ function buildChain(start,pool,maxLen){
 }
 
 function generateDeal(level){
-  const all=[];for(const s of SUITS)for(const r of RANKS)all.push({rank:r,suit:s});
-  shuffle(all);
-  const startDiscard=all.pop();
   const drawSizes=[0,23,23,22,22,21,20,19,18,17,16];
   const drawSize=drawSizes[level]||16;
-  const open10=all.splice(0,10);
-  const pyrCards=all.splice(0,18);
-  const drawArr=all.splice(0,drawSize);
+  let open10,pyrCards,drawArr,startDiscard;
+  let attempts=0;
+  do{
+    const all=[];for(const s of SUITS)for(const r of RANKS)all.push({rank:r,suit:s});
+    shuffle(all);
+    startDiscard=all.pop();
+    open10=all.splice(0,10);
+    pyrCards=all.splice(0,18);
+    drawArr=all.splice(0,drawSize);
+    attempts++;
+    const suitCount={};
+    for(const c of open10) suitCount[c.suit]=(suitCount[c.suit]||0)+1;
+    const maxSuit=Math.max(...Object.values(suitCount));
+    if(maxSuit<=5) break;
+  }while(attempts<5);
   return{startDiscard,open10,pyrCards,drawArr};
 }
 
