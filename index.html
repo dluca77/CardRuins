@@ -176,6 +176,22 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;back
 @keyframes loseShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px) rotate(-2deg)}30%{transform:translateX(8px) rotate(2deg)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}}
 @keyframes rbkFadeIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
 .rtitle.win{animation:resultGlow 2s ease-in-out infinite}
+/* ── GAME HIGHLIGHT SCHERM ── */
+#gameHighlight{display:none;position:fixed;inset:0;z-index:220;background:rgba(0,0,0,.97);flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0}
+#gameHighlight.show{display:flex}
+@keyframes hlSlideUp{0%{opacity:0;transform:translateY(40px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes hlCardPop{0%{opacity:0;transform:scale(0.4) rotate(-10deg)}60%{transform:scale(1.15) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes hlCardFly{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(0.6)}}
+@keyframes hlPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes hlCountdown{0%{stroke-dashoffset:0}100%{stroke-dashoffset:188}}
+.hl-card{width:52px;height:74px;border-radius:6px;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,.8);flex-shrink:0;position:relative;overflow:hidden;border:2px solid transparent}
+.hl-card.red{color:#cc0000}
+.hl-card.blk{color:#111}
+.hl-card-suit{position:absolute;top:3px;left:4px;font-size:11px;line-height:1}
+.hl-card-center{font-size:22px}
+.hl-card-suit-bot{position:absolute;bottom:3px;right:4px;font-size:11px;line-height:1;transform:rotate(180deg)}
+.hl-card.combo-card{border-color:rgba(255,180,40,.6);box-shadow:0 0 16px rgba(255,180,40,.4),0 4px 20px rgba(0,0,0,.8)}
+
 /* ── HIGHSCORE POPUP ── */
 #hsPopup{display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.85);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px}
 #hsPopup.show{display:flex}
@@ -1185,7 +1201,7 @@ async function initLevel(level){
       p.push(r);
     }pyr.push(p);
   }
-  score=0;combo=0;frozen=false;_pyrBonusClaimed=[false,false,false];
+  score=0;combo=0;frozen=false;_pyrBonusClaimed=[false,false,false];_resetGameLog();
   totalScore=levelScores.reduce((a,v)=>a+v,0);
   timer=LEVEL_TIME[level];gameActive=true;
   document.getElementById('lvlval').textContent=level+'/10';
@@ -1474,7 +1490,8 @@ function clickPyr(pi,row,col){
 function doPlay(card,el,target){sfxCard();
   combo++;
   if(typeof achOnCombo==="function")achOnCombo(combo);
-  const pts=getBasis()*combo;  // basis(level) × combo-positie
+  const pts=getBasis()*combo;
+  _logMove(card,combo,pts);  // basis(level) × combo-positie
   score+=pts;
   if(target==='main')discard={rank:card.rank,suit:card.suit};
   else{bonusDiscard={rank:card.rank,suit:card.suit};_ach.bonusAangeraakt=true;}
@@ -1501,7 +1518,7 @@ function wrongEl(el){sfxWrong();
   // Particle burst at discard position
   const dc=document.getElementById('dcard');
   if(dc){const r=dc.getBoundingClientRect();comboResetBurst(r.left+r.width/2,r.top+r.height/2);}
-  score=Math.max(0,score-pen);combo=0;if(typeof achOnFout==="function")achOnFout();renderHUD();frozen=true;
+  score=Math.max(0,score-pen);combo=0;if(typeof achOnFout==="function")achOnFout();if(discard)_logFout(discard);_gameLog.currentRun=[];renderHUD();frozen=true;
   if(el){const r=el.getBoundingClientRect();scorePop(-pen,r.left+r.width/2,r.top+r.height/2,true);el.classList.add('wrong');setTimeout(()=>{el.classList.remove('wrong');frozen=false;},250);}
   else frozen=false;
 }
@@ -1607,6 +1624,25 @@ function refreshOpen(i){
 function renderHUD(animateDiscard){renderScore();renderDiscard(animateDiscard);renderDraw();renderCombo();renderTimer();renderBonus();}
 
 let _scoreDisplay=0,_scoreTarget=0,_scoreRaf=null;
+// ── GAME TRACKING ──────────────────────────────────────────────
+let _gameLog={moves:[],bestCombo:0,bestComboRun:[],currentRun:[],fouten:0,foutCards:{}};
+function _logMove(card,combo,pts){
+  _gameLog.moves.push({rank:card.rank,suit:card.suit,combo,pts,t:Date.now()});
+  _gameLog.currentRun.push({rank:card.rank,suit:card.suit,combo,pts});
+  if(combo>_gameLog.bestCombo){
+    _gameLog.bestCombo=combo;
+    _gameLog.bestComboRun=[..._gameLog.currentRun];
+  }
+  if(combo===0)_gameLog.currentRun=[];
+}
+function _logFout(card){
+  _gameLog.fouten++;
+  const key=card.rank+card.suit;
+  _gameLog.foutCards[key]=(_gameLog.foutCards[key]||0)+1;
+}
+function _resetGameLog(){
+  _gameLog={moves:[],bestCombo:0,bestComboRun:[],currentRun:[],fouten:0,foutCards:{}};
+}
 let _top4Cache=null; // Pre-fetched supabase top4 check voor level 10
 function renderScore(){
   const el=document.getElementById('sval');if(!el)return;
@@ -1910,13 +1946,169 @@ function endLevel(win){
     }
   }
 
+  const _doShowResult=()=>showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);
+  const _withHighlight=(cb)=>{
+    // Alleen highlight bij level 10 win
+    if(win&&currentLevel===10){
+      showGameHighlight(cb);
+    } else {
+      cb();
+    }
+  };
+
   if(win && allCleared){
-    lightningAnimation(()=>{sfxWin();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);});
+    lightningAnimation(()=>{sfxWin();_withHighlight(_doShowResult);});
   } else if(win){
-    sfxWin();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);
+    sfxWin();_withHighlight(_doShowResult);
   } else {
-    sfxLose();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);
+    sfxLose();_doShowResult();
   }
+}
+
+// ── GAME HIGHLIGHT ──────────────────────────────────────────────
+function _isRed(suit){return suit==='♥'||suit==='♦';}
+function _makeHLCard(c,delay=0,glow=false){
+  const col=_isRed(c.suit)?'red':'blk';
+  const div=document.createElement('div');
+  div.className='hl-card '+col+(glow?' combo-card':'');
+  div.style.cssText=`opacity:0;animation:hlCardPop .4s cubic-bezier(.34,1.4,.64,1) ${delay}s forwards`;
+  div.innerHTML=`<span class="hl-card-suit">${c.rank}<br>${c.suit}</span><span class="hl-card-center">${c.suit}</span><span class="hl-card-suit-bot">${c.rank}<br>${c.suit}</span>`;
+  return div;
+}
+
+function showGameHighlight(onDone){
+  const hl=document.getElementById('gameHighlight');
+  const badge=document.getElementById('hlBadge');
+  const title=document.getElementById('hlTitle');
+  const sub=document.getElementById('hlSub');
+  const cards=document.getElementById('hlCards');
+  const comboNum=document.getElementById('hlComboNum');
+  const tip=document.getElementById('hlTip');
+  const timerCircle=document.getElementById('hlTimer');
+
+  // Reset
+  cards.innerHTML='';comboNum.style.display='none';tip.style.display='none';
+  badge.textContent='';title.textContent='';sub.textContent='';
+
+  // Bepaal wat te tonen: beste combo of tip bij veel fouten
+  const log=_gameLog;
+  const circumference=100;
+  let phase='combo'; // of 'tip'
+
+  // Meeste fouten op 1 kaart
+  let worstCard=null,worstCount=0;
+  for(const [key,count] of Object.entries(log.foutCards)){
+    if(count>worstCount){worstCount=count;worstCard=key;}
+  }
+
+  if(log.bestCombo>=5&&log.bestComboRun.length>=3){
+    phase='combo';
+  } else if(worstCount>=2){
+    phase='tip';
+  } else if(log.bestCombo>=2){
+    phase='combo';
+  } else {
+    // Niks speciaals — direct door
+    onDone();return;
+  }
+
+  hl.classList.add('show');
+
+  if(phase==='combo'){
+    badge.textContent='✨ JOUW BESTE COMBO';
+    title.innerHTML=`<span style="color:#ffd700">${log.bestCombo}x</span> COMBO!`;
+    const run=log.bestComboRun.slice(-Math.min(log.bestComboRun.length,8));
+    sub.textContent=`${run.length} kaarten op rij — ${(run.reduce((a,m)=>a+m.pts,0)).toLocaleString('nl-NL')} punten`;
+
+    // Kaarten één voor één laten invliegen
+    run.forEach((m,i)=>{
+      const card=_makeHLCard(m, 0.1+i*0.12, true);
+      cards.appendChild(card);
+    });
+
+    // Combo getal
+    setTimeout(()=>{
+      comboNum.textContent='×'+log.bestCombo;
+      comboNum.style.display='block';
+      comboNum.style.animation='none';comboNum.offsetHeight;
+      comboNum.style.animation='hlSlideUp .4s ease forwards';
+    }, 0.1+run.length*0.12*1000+200);
+
+  } else {
+    // Tip modus
+    phase='tip';
+    badge.textContent='💡 TIP VOOR JOU';
+    title.textContent='VEELGEMAAKTE FOUT';
+    const suit=worstCard?worstCard.slice(-1):'';
+    const rank=worstCard?worstCard.slice(0,-1):'';
+    tip.style.display='block';
+    tip.innerHTML=`Je klikte <b style="color:#ff8080">${worstCount}x</b> op een kaart die niet speelbaar was.<br><br>
+      💡 <b style="color:#80c8ff">Let op het verschil:</b> een kaart is alleen speelbaar als de waarde 1 hoger of lager is dan de aflegkaart. Aas en Koning sluiten op elkaar aan.`;
+    sub.textContent='Onthoud dit voor de volgende run!';
+  }
+
+  // Countdown timer: 5 seconden dan automatisch door
+  let elapsed=0;
+  const total=5000;
+  const interval=50;
+  const timerIv=setInterval(()=>{
+    elapsed+=interval;
+    const pct=elapsed/total;
+    timerCircle.setAttribute('stroke-dashoffset', pct*circumference);
+    if(elapsed>=total){
+      clearInterval(timerIv);
+      hl.classList.remove('show');
+      onDone();
+    }
+  },interval);
+
+  // Klik = ook doorgaan
+  hl.addEventListener('click',function once(){
+    clearInterval(timerIv);
+    hl.classList.remove('show');
+    hl.removeEventListener('click',once);
+    onDone();
+  });
+}
+// ── EINDE GAME HIGHLIGHT ─────────────────────────────────────────
+
+function _triggerHSPopup(myScore){
+  // Altijd naam modal direct tonen — geen wachttijd
+  // Supabase check bepaalt of de popup daarna ook echt verschijnt
+  let _modalShown=false;
+  let _modalName=null;
+  let _modalDone=false;
+
+  const tryShow=()=>{
+    if(_modalDone&&_modalName!==null){
+      _showHSPopup(myScore,_modalName);
+    }
+  };
+
+  // Start naam modal direct
+  _showNameModalForHS(name=>{
+    _modalName=name;
+    _modalDone=true;
+    tryShow();
+  });
+
+  // Supabase check parallel — als niet in top4, sluit de popup meteen weer
+  const checkTop4=()=>{
+    if(_top4Cache){
+      const inTop4=_top4Cache.scores.length<4||myScore>_top4Cache.scores[_top4Cache.scores.length-1];
+      if(!inTop4){document.getElementById('nameModal').classList.remove('show');}
+      else tryShow();
+    } else {
+      _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4)
+        .then(({data})=>{
+          const scores=(data||[]).map(r=>r.score);
+          const inTop4=scores.length<4||myScore>scores[scores.length-1];
+          if(!inTop4){document.getElementById('nameModal').classList.remove('show');}
+          else tryShow();
+        }).catch(()=>tryShow());
+    }
+  };
+  checkTop4();
 }
 
 function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
@@ -1942,37 +2134,24 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
     `<div class="rbk"><span class="rbkl">${l}</span><span class="rbkv" style="color:${v>0?'#ffd070':'rgba(255,180,60,0.3)'}">+${v.toLocaleString('nl-NL')}</span></div>`
   ).join('');
 
-  // Big yellow numbers count up from prevTotal to newTotal
+  // Score telt snel op, daarna direct popup op level 10
   const se=document.getElementById('rscore');
   se.innerHTML=`<div id="lvlscr">${prevTotal.toLocaleString('nl-NL')}</div>`;
   const lvlEl=document.getElementById('lvlscr');
   let d=prevTotal;
-  const step=Math.max(1000,Math.ceil((newTotal-prevTotal)/60));
-
+  // Sneller aftellen: klaar in ~600ms
+  const step=Math.max(1000,Math.ceil((newTotal-prevTotal)/20));
   const thisLevel=currentLevel;
+  const _scoreToCheck=newTotal;
 
   const iv=setInterval(()=>{
-    d=Math.min(d+step,newTotal);
+    d=Math.min(d+step,_scoreToCheck);
     lvlEl.textContent=d.toLocaleString('nl-NL');
-    if(d>=newTotal){
+    if(d>=_scoreToCheck){
       clearInterval(iv);
-      // Aftellen klaar — nu direct popup tonen als level 10
-      if(thisLevel>=10){
-        function _checkAndShowHS(scores){
-          const inTop4=scores.length<4||newTotal>scores[scores.length-1];
-          if(!inTop4) return;
-          _showNameModalForHS(name=>_showHSPopup(newTotal,name));
-        }
-        if(_top4Cache){
-          _checkAndShowHS(_top4Cache.scores);
-        } else {
-          _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4)
-            .then(({data})=>_checkAndShowHS((data||[]).map(r=>r.score)))
-            .catch(()=>_showNameModalForHS(name=>_showHSPopup(newTotal,name)));
-        }
-      }
+      if(thisLevel>=10) _triggerHSPopup(_scoreToCheck);
     }
-  },28);
+  },16);
 
   const btns=document.getElementById('rbtns');btns.innerHTML='';
   if(currentLevel<10){
@@ -4491,6 +4670,24 @@ async function submitOnlineScore(score){
   <div class="hsp-board" id="hspBoard"></div>
   <div id="hspRank" style="font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:2px;color:#60c0ff;min-height:18px;text-align:center"></div>
   <button onclick="showFinalHS()" style="font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:2px;padding:12px 32px;border-radius:24px;border:2px solid rgba(255,215,0,.4);background:rgba(255,215,0,.1);color:#ffd070;cursor:pointer;margin-top:8px">EINDSTAND BEKIJKEN ▶</button>
+</div>
+
+<div id="gameHighlight">
+  <div id="hlInner" style="width:100%;max-width:520px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px">
+    <div id="hlBadge" style="font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:4px;color:rgba(255,200,60,.7);text-align:center"></div>
+    <div id="hlTitle" style="font-family:'Russo One',sans-serif;font-size:28px;color:#fff;text-align:center;line-height:1.2"></div>
+    <div id="hlSub" style="font-family:'Rajdhani',sans-serif;font-size:15px;color:rgba(255,255,255,.5);text-align:center;letter-spacing:1px"></div>
+    <div id="hlCards" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-height:90px;align-items:center"></div>
+    <div id="hlComboNum" style="font-family:'Russo One',sans-serif;font-size:56px;color:#ffd700;text-shadow:0 0 40px rgba(255,215,0,.8);display:none"></div>
+    <div id="hlTip" style="font-family:'Rajdhani',sans-serif;font-size:16px;color:rgba(200,220,255,.85);text-align:center;max-width:380px;line-height:1.5;display:none;background:rgba(100,150,255,.08);border:1px solid rgba(100,150,255,.2);border-radius:12px;padding:14px 20px"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+      <svg width="40" height="40" style="transform:rotate(-90deg)">
+        <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="3"/>
+        <circle id="hlTimer" cx="20" cy="20" r="16" fill="none" stroke="#ffd700" stroke-width="3" stroke-dasharray="100 100" stroke-linecap="round" style="transition:stroke-dashoffset .1s linear"/>
+      </svg>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:rgba(255,255,255,.4);letter-spacing:2px">DOORGAAN NAAR EINDSTAND</div>
+    </div>
+  </div>
 </div>
 
 <div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;padding:12px 16px max(12px,env(safe-area-inset-bottom));background:linear-gradient(135deg,rgba(20,12,0,0.97),rgba(35,20,5,0.97));border-top:1px solid rgba(200,140,40,0.4);box-shadow:0 -4px 20px rgba(0,0,0,0.5);backdrop-filter:blur(12px)">
