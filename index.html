@@ -467,7 +467,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 .mp-players{width:100%;display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto}
 .mp-player{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
 .mp-player.me{background:rgba(255,215,0,.08);border-color:rgba(255,215,0,.2)}
-.mp-pname{font-family:'Russo One',sans-serif;font-size:11px;color:#fff;flex:1;letter-spacing:.5px}
+.mp-pname{font-family:'Russo One',sans-serif;font-size:11px;color:#e8d8a0;flex:1;letter-spacing:.5px}
 .mp-pscore{font-family:'Russo One',sans-serif;font-size:13px;color:#ffd700}
 .mp-pbadge{font-size:9px;padding:2px 7px;border-radius:8px;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:1px}
 .mp-pbadge.playing{background:rgba(60,200,60,.15);color:#60ff80;border:1px solid rgba(60,200,60,.25)}
@@ -511,7 +511,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 .mp-slot.empty{border-style:dashed;border-color:rgba(255,255,255,.12);background:rgba(0,0,0,.15)}
 .mp-slot-icon{font-size:20px;flex-shrink:0;width:26px;text-align:center}
 .mp-slot-info{flex:1;min-width:0}
-.mp-slot-name{font-family:'Russo One',sans-serif;font-size:11px;color:#fff;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-slot-name{font-family:'Russo One',sans-serif;font-size:11px;color:#e8d8a0;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mp-slot-status{font-family:'Rajdhani',sans-serif;font-size:11px;color:rgba(255,255,255,.35);margin-top:1px}
 .mp-slot-status.you{color:rgba(255,215,0,.7)}
 .mp-slot-status.waiting{color:rgba(255,180,40,.5)}
@@ -529,7 +529,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
 .mp-wait-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);transition:all .3s}
 .mp-wait-row.done{border-color:rgba(60,200,80,.3);background:rgba(60,200,80,.06)}
 .mp-wait-row.leading{border-color:rgba(255,215,0,.35);background:rgba(255,215,0,.07)}
-.mp-wait-row-name{font-family:'Russo One',sans-serif;font-size:11px;color:#fff;flex:1;letter-spacing:.5px}
+.mp-wait-row-name{font-family:'Russo One',sans-serif;font-size:11px;color:#e8d8a0;flex:1;letter-spacing:.5px}
 .mp-wait-row-score{font-family:'Russo One',sans-serif;font-size:13px;color:#ffd700;margin-right:4px}
 .mp-wait-row-status{font-size:15px;width:20px;text-align:center}
 .mp-countdown{font-family:'Russo One',sans-serif;font-size:36px;color:#ffd070;text-shadow:0 0 30px rgba(255,215,0,.5);text-align:center;min-width:50px}
@@ -1164,6 +1164,14 @@ function buildChain(start,pool,maxLen){
 function startGame(level){hideOv('levels');currentLevel=level;showScreen('sgame');initLevel(level);document.getElementById('pillarL').style.display='block';document.getElementById('pillarR').style.display='block';}
 
 async function initLevel(level){
+  // Pre-fetch top 4 check zodra level 10 start
+  if(level===10){
+    _top4Cache=null;
+    _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4)
+      .then(({data})=>{
+        _top4Cache={scores:(data||[]).map(r=>r.score), ts:Date.now()};
+      }).catch(()=>{ _top4Cache={scores:[],ts:Date.now()}; });
+  }
   const{startDiscard,open10,pyrCards,drawArr}=generateDeal(level);
   discard=startDiscard;bonusDiscard=null;drawPile=drawArr;
   openCards=open10.map((c,i)=>({...c,removed:false,faceUp:true,idx:i}));
@@ -1394,7 +1402,18 @@ async function dealAnim(){
   });
 }
 
-function tick(){if(!gameActive)return;timer--;if(timer<=0){timer=0;endLevel(false);}renderTimer();}
+function tick(){
+  if(!gameActive)return;
+  timer--;
+  if(timer<=0){timer=0;endLevel(false);}
+  renderTimer();
+  // Refresh top4 cache halverwege level 10 voor verse data
+  if(currentLevel===10&&timer===Math.floor(LEVEL_TIME[10]/2)&&_top4Cache){
+    _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4)
+      .then(({data})=>{ _top4Cache={scores:(data||[]).map(r=>r.score),ts:Date.now()}; })
+      .catch(()=>{});
+  }
+}
 
 function wasDiscardPlayable(){
   if(!discard)return false;
@@ -1588,6 +1607,7 @@ function refreshOpen(i){
 function renderHUD(animateDiscard){renderScore();renderDiscard(animateDiscard);renderDraw();renderCombo();renderTimer();renderBonus();}
 
 let _scoreDisplay=0,_scoreTarget=0,_scoreRaf=null;
+let _top4Cache=null; // Pre-fetched supabase top4 check voor level 10
 function renderScore(){
   const el=document.getElementById('sval');if(!el)return;
   const display=totalScore+score;
@@ -1929,25 +1949,29 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
   let d=prevTotal;
   const step=Math.max(1000,Math.ceil((newTotal-prevTotal)/60));
 
-  // Level 10: naam modal direct tonen (geen wachttijd, geen Supabase check vooraf)
   const thisLevel=currentLevel;
-  if(thisLevel>=10){
-    setTimeout(()=>{
-      const savedName=localStorage.getItem('cr_playername')||'';
-      if(savedName){
-        // Naam al bekend — direct popup tonen
-        _showHSPopup(newTotal,savedName);
-      } else {
-        // Geen naam — eerst modal tonen
-        _showNameModalForHS(name=>_showHSPopup(newTotal,name));
-      }
-    }, 400);
-  }
 
   const iv=setInterval(()=>{
     d=Math.min(d+step,newTotal);
     lvlEl.textContent=d.toLocaleString('nl-NL');
-    if(d>=newTotal) clearInterval(iv);
+    if(d>=newTotal){
+      clearInterval(iv);
+      // Aftellen klaar — nu direct popup tonen als level 10
+      if(thisLevel>=10){
+        function _checkAndShowHS(scores){
+          const inTop4=scores.length<4||newTotal>scores[scores.length-1];
+          if(!inTop4) return;
+          _showNameModalForHS(name=>_showHSPopup(newTotal,name));
+        }
+        if(_top4Cache){
+          _checkAndShowHS(_top4Cache.scores);
+        } else {
+          _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4)
+            .then(({data})=>_checkAndShowHS((data||[]).map(r=>r.score)))
+            .catch(()=>_showNameModalForHS(name=>_showHSPopup(newTotal,name)));
+        }
+      }
+    }
   },28);
 
   const btns=document.getElementById('rbtns');btns.innerHTML='';
@@ -4485,7 +4509,7 @@ async function submitOnlineScore(score){
 
 
 <!-- ADMIN PANEL -->
-<div id="adminOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#05051a;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div id="adminOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0e0a18;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
   <!-- PIN SCREEN -->
   <div id="adminPinScreen" style="display:flex;position:absolute;inset:0;background:#05051a;align-items:center;justify-content:center;flex-direction:column;gap:0;z-index:10;padding:16px;box-sizing:border-box">
@@ -4516,7 +4540,7 @@ async function submitOnlineScore(score){
   </div>
 
   <!-- ADMIN CONTENT -->
-  <div id="adminContent" style="display:none;padding:0;font-family:'Rajdhani',sans-serif">
+  <div id="adminContent" style="display:none;padding:0;font-family:'Rajdhani',sans-serif;color:#e0d0b0">
 
     <!-- Header -->
     <div style="background:rgba(10,4,0,.98);border-bottom:1px solid rgba(200,140,40,.2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5">
@@ -4770,7 +4794,7 @@ async function aLoadPlayers(){
   if(!players||players.length===0){el.innerHTML='<div style="text-align:center;padding:20px;color:rgba(255,255,255,.25);font-size:12px">Geen spelers</div>';return;}
   el.innerHTML='<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden">'+
     players.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05);flex-wrap:wrap">
-      <div style="flex:1;min-width:80px;font-family:'Russo One',sans-serif;font-size:11px">${p.name}</div>
+      <div style="flex:1;min-width:80px;font-family:'Russo One',sans-serif;font-size:11px;color:#e8d8a0">${p.name}</div>
       <div style="color:#ffd070;font-family:'Russo One',sans-serif;font-size:11px">${p.score>0?p.score.toLocaleString('nl-NL'):'—'}</div>
       <div style="font-size:10px;color:rgba(255,255,255,.3)">${p.status}</div>
       <button onclick="aEditPlayerName('${p.id}','${p.name.replace(/'/g,"\'")}')" style="font-size:11px;background:rgba(255,200,60,.08);border:1px solid rgba(255,200,60,.2);border-radius:6px;cursor:pointer;color:#ffd070;padding:3px 6px">✏️</button>
@@ -4787,10 +4811,10 @@ async function aLoadScores(){
   const medals=['🥇','🥈','🥉'];
 
   const rows=(scores||[]).map((s,i)=>`
-    <div id="asr_${s.id}" style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05)">
+    <div id="asr_${s.id}" style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:4px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:0" id="asrView_${s.id}">
         <div style="font-size:16px;width:24px;text-align:center;flex-shrink:0">${medals[i]||'#'+(i+1)}</div>
-        <div style="flex:1;font-family:'Russo One',sans-serif;font-size:12px">${s.name||'?'}</div>
+        <div style="flex:1;font-family:'Russo One',sans-serif;font-size:12px;color:#e8d8a0">${s.name||'?'}</div>
         <div style="color:#ffd070;font-family:'Russo One',sans-serif;font-size:13px;margin-right:4px">${s.score.toLocaleString('nl-NL')}</div>
         <button onclick="aEditScore('${s.id}','${(s.name||'').replace(/'/g,"\'")}',${s.score})" style="font-size:13px;background:rgba(255,200,60,.08);border:1px solid rgba(255,200,60,.2);border-radius:6px;cursor:pointer;color:#ffd070;padding:3px 8px">✏️</button>
         <button onclick="aConfirm('${(s.name||'?').replace(/'/g,"\'")} verwijderen?',()=>aDeleteScore('${s.id}'))" style="font-size:13px;background:none;border:none;cursor:pointer;color:rgba(255,80,60,.6);padding:3px">🗑</button>
