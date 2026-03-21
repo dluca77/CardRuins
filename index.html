@@ -1929,24 +1929,19 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
   let d=prevTotal;
   const step=Math.max(1000,Math.ceil((newTotal-prevTotal)/60));
 
-  // Level 10: direct naam modal + check parallel
+  // Level 10: naam modal direct tonen (geen wachttijd, geen Supabase check vooraf)
   const thisLevel=currentLevel;
-  let _hsNameResolve=null;
-  let _hsNamePromise=null;
   if(thisLevel>=10){
-    // Start naam modal DIRECT — niet wachten op Supabase
-    _hsNamePromise=new Promise(resolve=>{ _hsNameResolve=resolve; });
-    // Toon naam modal meteen
-    setTimeout(()=>_showNameModalForHS(_hsNameResolve), 400);
-    // Check Supabase parallel
-    _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4)
-      .then(({data})=>{
-        const scores=(data||[]).map(r=>r.score);
-        const inTop4=scores.length<4||newTotal>scores[scores.length-1];
-        if(inTop4&&_hsNamePromise){
-          _hsNamePromise.then(name=>_showHSPopup(newTotal,name));
-        }
-      }).catch(()=>{});
+    setTimeout(()=>{
+      const savedName=localStorage.getItem('cr_playername')||'';
+      if(savedName){
+        // Naam al bekend — direct popup tonen
+        _showHSPopup(newTotal,savedName);
+      } else {
+        // Geen naam — eerst modal tonen
+        _showNameModalForHS(name=>_showHSPopup(newTotal,name));
+      }
+    }, 400);
   }
 
   const iv=setInterval(()=>{
@@ -2058,14 +2053,12 @@ async function _showHSPopup(myScore,playerName){
   popup.classList.add('show');
 
   // Submit naar Supabase als naam ingevuld
-  let submittedOk=false;
   if(playerName){
     localStorage.setItem('cr_playername',playerName);
     try{
       await _supabase.from('highscores').insert({name:playerName,score:myScore});
       const{data:all}=await _supabase.from('highscores').select('id').order('score',{ascending:false});
       if(all&&all.length>4) for(const row of all.slice(4)) await _supabase.from('highscores').delete().eq('id',row.id);
-      submittedOk=true;
     }catch(e){console.warn('Score submit failed:',e);}
   }
 
