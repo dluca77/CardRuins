@@ -1064,25 +1064,53 @@ function confirmRetry(){
 }
 
 function generateDeal(level){
+  const all=[];for(const s of SUITS)for(const r of RANKS)all.push({rank:r,suit:s});shuffle(all);
+  const startDiscard=all.pop();
+  const pool=[...all];
+
+  const chainChance = level<=3 ? 0.35 : level<=6 ? 0.55 : 0.75;
+  const chainMaxLen = level<=3 ? 3 : level<=6 ? 4 : 8;
+  const chainMaxSlice = level<=3 ? 3 : level<=6 ? 4 : 6;
+
+  const useChain=Math.random()<chainChance;
+  let open10;
+  let remaining;
+  if(useChain){
+    const chain=buildChain(startDiscard,pool,chainMaxLen);
+    const chainSet=new Set(chain.map(c=>c.rank+c.suit));
+    remaining=pool.filter(c=>!chainSet.has(c.rank+c.suit));
+    const chainSlice=chain.slice(0,Math.min(chain.length,chainMaxSlice));
+    const fillers=remaining.splice(0,10-chainSlice.length);
+    open10=shuffle([...chainSlice,...fillers]).slice(0,10);
+  } else {
+    remaining=[...pool];
+    open10=remaining.splice(0,10);
+    shuffle(open10);
+  }
+
+  const pyrChainChance = 0.40;
+  const pyrChainLen = 2 + Math.floor(Math.random()*3);
+  let pyrCards = remaining.splice(0,18);
+
+  for(let pi=0;pi<3;pi++){
+    if(Math.random()>pyrChainChance) continue;
+    const anchor=open10[Math.floor(Math.random()*open10.length)]||startDiscard;
+    const chainPool=remaining.slice();
+    const miniChain=buildChain(anchor,chainPool,pyrChainLen);
+    if(miniChain.length<2) continue;
+    const chainUsed=new Set(miniChain.map(c=>c.rank+c.suit));
+    pyrCards=pyrCards.filter(c=>!chainUsed.has(c.rank+c.suit));
+    while(pyrCards.length<18&&remaining.length){pyrCards.push(remaining.shift());}
+    const topCards=pyrCards.splice(0,3);
+    const bottomChain=miniChain.slice(0,3);
+    while(bottomChain.length<3&&pyrCards.length) bottomChain.push(pyrCards.shift());
+    const pyrBlock=[...topCards,...shuffle(bottomChain)];
+    pyrCards.splice(pi*6,0,...pyrBlock);
+    pyrCards=pyrCards.slice(0,18);
+  }
+
   const drawSizes=[0,23,23,22,22,21,20,19,18,17,16];
-  const drawSize=drawSizes[level]||16;
-  let open10,pyrCards,drawArr,startDiscard;
-  // Hershuffle als de open rij toevallig te uniform is (zelfde suit of te sequentieel)
-  let attempts=0;
-  do{
-    const all=[];for(const s of SUITS)for(const r of RANKS)all.push({rank:r,suit:s});
-    shuffle(all);
-    startDiscard=all.pop();
-    open10=all.splice(0,10);
-    pyrCards=all.splice(0,18);
-    drawArr=all.splice(0,drawSize);
-    attempts++;
-    // Check: niet meer dan 5 van dezelfde suit in de open rij
-    const suitCount={};
-    for(const c of open10) suitCount[c.suit]=(suitCount[c.suit]||0)+1;
-    const maxSuit=Math.max(...Object.values(suitCount));
-    if(maxSuit<=5) break;
-  }while(attempts<5);
+  const drawArr=shuffle(remaining).slice(0,drawSizes[level]||16);
   return{startDiscard,open10,pyrCards,drawArr};
 }
 function buildChain(start,pool,maxLen){
@@ -1119,23 +1147,45 @@ function buildChain(start,pool,maxLen){
 }
 
 function generateDeal(level){
+  const all=[];for(const s of SUITS)for(const r of RANKS)all.push({rank:r,suit:s});shuffle(all);
+  const startDiscard=all.pop();
+  const pool=[...all];
+  const chainChance=level<=3?0.35:level<=6?0.55:0.75;
+  const chainMaxLen=level<=3?3:level<=6?4:8;
+  const chainMaxSlice=level<=3?3:level<=6?4:6;
+  const useChain=Math.random()<chainChance;
+  let open10,remaining;
+  if(useChain){
+    const chain=buildChain(startDiscard,pool,chainMaxLen);
+    const chainSet=new Set(chain.map(c=>c.rank+c.suit));
+    remaining=pool.filter(c=>!chainSet.has(c.rank+c.suit));
+    const chainSlice=chain.slice(0,Math.min(chain.length,chainMaxSlice));
+    const fillers=remaining.splice(0,10-chainSlice.length);
+    open10=shuffle([...chainSlice,...fillers]).slice(0,10);
+  } else {
+    remaining=[...pool];open10=remaining.splice(0,10);shuffle(open10);
+  }
+  const pyrChainChance=0.40;
+  const pyrChainLen=2+Math.floor(Math.random()*3);
+  let pyrCards=remaining.splice(0,18);
+  for(let pi=0;pi<3;pi++){
+    if(Math.random()>pyrChainChance)continue;
+    const anchor=open10[Math.floor(Math.random()*open10.length)]||startDiscard;
+    const chainPool=remaining.slice();
+    const miniChain=buildChain(anchor,chainPool,pyrChainLen);
+    if(miniChain.length<2)continue;
+    const chainUsed=new Set(miniChain.map(c=>c.rank+c.suit));
+    pyrCards=pyrCards.filter(c=>!chainUsed.has(c.rank+c.suit));
+    while(pyrCards.length<18&&remaining.length){pyrCards.push(remaining.shift());}
+    const topCards=pyrCards.splice(0,3);
+    const bottomChain=miniChain.slice(0,3);
+    while(bottomChain.length<3&&pyrCards.length)bottomChain.push(pyrCards.shift());
+    const pyrBlock=[...topCards,...shuffle(bottomChain)];
+    pyrCards.splice(pi*6,0,...pyrBlock);
+    pyrCards=pyrCards.slice(0,18);
+  }
   const drawSizes=[0,23,23,22,22,21,20,19,18,17,16];
-  const drawSize=drawSizes[level]||16;
-  let open10,pyrCards,drawArr,startDiscard;
-  let attempts=0;
-  do{
-    const all=[];for(const s of SUITS)for(const r of RANKS)all.push({rank:r,suit:s});
-    shuffle(all);
-    startDiscard=all.pop();
-    open10=all.splice(0,10);
-    pyrCards=all.splice(0,18);
-    drawArr=all.splice(0,drawSize);
-    attempts++;
-    const suitCount={};
-    for(const c of open10) suitCount[c.suit]=(suitCount[c.suit]||0)+1;
-    const maxSuit=Math.max(...Object.values(suitCount));
-    if(maxSuit<=5) break;
-  }while(attempts<5);
+  const drawArr=shuffle(remaining).slice(0,drawSizes[level]||16);
   return{startDiscard,open10,pyrCards,drawArr};
 }
 
