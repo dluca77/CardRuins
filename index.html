@@ -1446,35 +1446,29 @@ const CARD_BACK_URL=(()=>{
   const cv=document.createElement('canvas');
   cv.width=100;cv.height=140;
   const ctx=cv.getContext('2d');
-  // Achtergrond: donker goud verloop
   const bg=ctx.createLinearGradient(0,0,100,140);
   bg.addColorStop(0,'#1a0d00');bg.addColorStop(0.4,'#2a1500');bg.addColorStop(1,'#120800');
   ctx.fillStyle=bg;ctx.fillRect(0,0,100,140);
-  // Rand
   ctx.strokeStyle='rgba(200,140,40,.7)';ctx.lineWidth=2.5;
   ctx.strokeRect(4,4,92,132);
   ctx.strokeStyle='rgba(200,140,40,.25)';ctx.lineWidth=1;
   ctx.strokeRect(8,8,84,124);
-  // Ruitpatroon
   ctx.strokeStyle='rgba(160,110,30,.2)';ctx.lineWidth=0.5;
   for(let i=-140;i<200;i+=12){
     ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i+140,140);ctx.stroke();
     ctx.beginPath();ctx.moveTo(i,140);ctx.lineTo(i+140,0);ctx.stroke();
   }
-  // Centraal symbool: runeteken
   ctx.save();ctx.translate(50,70);
   ctx.font='bold 36px serif';ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillStyle='rgba(200,140,40,.15)';ctx.fillText('ᚱ',0,0);
   ctx.strokeStyle='rgba(200,140,40,.5)';ctx.lineWidth=0.5;
   ctx.strokeText('ᚱ',0,0);ctx.restore();
-  // Hoek gloed
   const corner=ctx.createRadialGradient(50,70,10,50,70,60);
   corner.addColorStop(0,'rgba(200,140,40,.08)');
   corner.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle=corner;ctx.fillRect(0,0,100,140);
   return cv.toDataURL();
 })();
-
 
 function mkCard(c){
   const el=document.createElement('div');
@@ -1760,7 +1754,7 @@ function renderScore(){
   const display=totalScore+score;
   if(display===_scoreTarget)return;
   _scoreTarget=display;
-  if(_scoreRaf) return; // already animating
+  if(_scoreRaf) return;
   function animScore(){
     const diff=_scoreTarget-_scoreDisplay;
     if(Math.abs(diff)<50){
@@ -2087,7 +2081,6 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
   t.textContent='LEVEL '+currentLevel;
   t.className='rtitle '+(win?'win':'lose');
 
-  // Win: goudstof explosie vanuit het midden
   if(win){
     setTimeout(()=>{
       const colors=['#ffd700','#ffaa20','#fff0a0','#ff8800','#fffbe0'];
@@ -2308,31 +2301,23 @@ function scorePop(pts,x,y,neg){
   const fmt=Math.abs(pts)>=1000?(Math.abs(pts)/1000).toFixed(1)+'K':Math.abs(pts);
   el.textContent=(neg?'-':'+')+fmt;
   el.style.left=x+'px';el.style.top=y+'px';
-
-  // Groter en expressiever bij hoge combo
   const c=combo;
   if(!neg&&c>=15){
     el.className='spop';
-    el.style.fontSize='32px';
-    el.style.color='#fff';
+    el.style.fontSize='32px';el.style.color='#fff';
     el.style.textShadow='0 0 20px #ff8800,0 0 40px #ff4400,0 0 60px #ff0000';
-    el.style.fontWeight='900';
   } else if(!neg&&c>=10){
     el.className='spop';
-    el.style.fontSize='26px';
-    el.style.color='#ffcc00';
+    el.style.fontSize='26px';el.style.color='#ffcc00';
     el.style.textShadow='0 0 16px #ffaa00,0 0 32px #ff6600';
   } else if(!neg&&c>=5){
     el.className='spop';
-    el.style.fontSize='20px';
-    el.style.color='#80ffaa';
+    el.style.fontSize='20px';el.style.color='#80ffaa';
     el.style.textShadow='0 0 10px rgba(80,255,140,.8)';
   } else {
     el.className='spop'+(neg?' neg':'');
   }
-
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),900);
+  document.body.appendChild(el);setTimeout(()=>el.remove(),900);
 }
 function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
 function saveHS(s){try{const sc=JSON.parse(localStorage.getItem('cr_hs2')||'[]');sc.push({score:s,date:new Date().toLocaleDateString('nl-NL')});sc.sort((a,b)=>b.score-a.score);localStorage.setItem('cr_hs2',JSON.stringify(sc.slice(0,4)));}catch(e){}}
@@ -2932,6 +2917,7 @@ function lightningAnimation(cb){
   setTimeout(tickSfeer,200);
 })();
 // ── EINDE SFEER DEELTJES ──────────────────────────────────────
+
 
 
 
@@ -3775,9 +3761,6 @@ async function mpCreateRoom(){
 
   const createBtn=document.querySelector('[onclick="mpCreateRoom()"]');
   if(createBtn){createBtn.disabled=true;createBtn.textContent='⏳ Aanmaken...';}
-
-  // Wacht op deal pool als die nog niet klaar is (duurt max ~250ms)
-  await new Promise(resolve=>_mpWaitForPool(resolve));
 
   try{
     const code=_mpGenCode();
@@ -5348,20 +5331,7 @@ function _mpStartTips(){
 function _mpStopTips(){clearInterval(_mpTipInt);_mpTipInt=null;}
 // ── END MP WAIT TIPS ──────────────────────────────────────────
 
-// ── DEAL POOL INITIALISATIE ────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{ _startDealWorker(); });
-
-// Bewaakt de MP "Aanmaken" knop: wacht tot pool klaar is (duurt ~250ms).
-function _mpWaitForPool(cb){
-  if(_dealPoolReady){cb();return;}
-  let waited=0;
-  const iv=setInterval(()=>{
-    waited+=100;
-    if(_dealPoolReady){clearInterval(iv);cb();}
-    else if(waited>8000){clearInterval(iv);cb();} // fallback na 8s
-  },100);
-}
-// ── EINDE POOL INITIALISATIE ───────────────────────────────────
 </script>
 
 </body>
