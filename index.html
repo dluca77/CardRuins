@@ -1947,11 +1947,11 @@ function endLevel(win){
   }
 
   if(win && allCleared){
-    lightningAnimation(()=>{sfxWin();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal,currentLevel);});
+    lightningAnimation(()=>{sfxWin();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);});
   } else if(win){
-    sfxWin();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal,currentLevel);
+    sfxWin();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);
   } else {
-    sfxLose();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal,currentLevel);
+    sfxLose();showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal);
   }
 }
 
@@ -1968,90 +1968,82 @@ function _makeHLCard(c,delay=0,glow=false){
 // ── EINDE GAME HIGHLIGHT ─────────────────────────────────────────
 
 
+// ── HIGHSCORE FLOW — simpel en direct ──────────────────────────
+async function _doHSFlow(myScore){
+  // Stap 1: check of in top4 (gebruik cache als beschikbaar)
+  let scores=[];
+  try{
+    if(_top4Cache&&_top4Cache.scores){
+      scores=_top4Cache.scores;
+    } else {
+      const{data}=await _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4);
+      scores=(data||[]).map(r=>r.score);
+    }
+  }catch(e){}
 
+  const inTop4=scores.length<4||myScore>scores[scores.length-1];
+  if(!inTop4) return; // Niet in top4, klaar
 
+  // Stap 2: naam vragen
+  const name=await _showNameModal();
+  if(!name||!name.trim()) return;
+  const trimmed=name.trim().substring(0,20);
+  localStorage.setItem('cr_playername',trimmed);
 
-// ── HIGHSCORE FLOW ───────────────────────────────────────────
-function _doHSFlow(myScore){
-  _supabase.from('highscores').select('score').order('score',{ascending:false}).limit(4)
-    .then(function(res){
-      var scores=(res.data||[]).map(function(r){return r.score;});
-      var inTop4=scores.length<4||myScore>scores[scores.length-1];
-      toast('HS: '+scores.length+' scores, jij: '+myScore+', top4: '+inTop4);
-      if(!inTop4) return;
+  // Stap 3: opslaan
+  try{
+    await _supabase.from('highscores').insert({name:trimmed,score:myScore});
+    const{data:all}=await _supabase.from('highscores').select('id').order('score',{ascending:false});
+    if(all&&all.length>4) for(const row of all.slice(4)) await _supabase.from('highscores').delete().eq('id',row.id);
+  }catch(e){console.warn('submit failed',e);}
 
-      // Altijd naam modal tonen — ook als naam al bekend
-      var modal=document.getElementById('nameModal');
-      var input=document.getElementById('nameInput');
-      var confirmBtn=document.getElementById('nameConfirm');
-      var skipBtn=document.getElementById('nameSkip');
-      input.value=localStorage.getItem('cr_playername')||'';
-      modal.classList.add('show');
-      setTimeout(function(){input.focus();},100);
-      function proceed(n){
-        modal.classList.remove('show');
-        confirmBtn.onclick=null;skipBtn.onclick=null;input.onkeydown=null;
-        if(!n||!n.trim()) return;
-        var naam=n.trim().substring(0,20);
-        localStorage.setItem('cr_playername',naam);
-        _submitAndShow(myScore,naam);
-      }
-      confirmBtn.onclick=function(){var v=input.value.trim().substring(0,20);if(v)proceed(v);};
-      skipBtn.onclick=function(){proceed(null);};
-      input.onkeydown=function(e){if(e.key==='Enter'){var v=input.value.trim().substring(0,20);if(v)proceed(v);}};
-    })
-    .catch(function(){
-      // Bij netwerkfout toch tonen
-      var naam=localStorage.getItem('cr_playername')||'Speler';
-      _submitAndShow(myScore,naam);
+  // Stap 4: toon popup met ranglijst
+  const popup=document.getElementById('hsPopup');
+  const board=document.getElementById('hspBoard');
+  const rankEl=document.getElementById('hspRank');
+  document.getElementById('hspScore').textContent=myScore.toLocaleString('nl-NL');
+  board.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:10px;font-size:12px">Laden...</div>';
+  rankEl.textContent='';
+  popup.classList.add('show');
+
+  try{
+    const{data}=await _supabase.from('highscores').select('name,score').order('score',{ascending:false}).limit(4);
+    const medals=['🥇','🥈','🥉','🏅'];
+    const rows=data||[];
+    const myIdx=rows.findIndex(r=>r.name===trimmed&&r.score===myScore);
+    if(myIdx===0) rankEl.textContent='🥇 WERELDRECORD!';
+    else if(myIdx>0) rankEl.textContent=`🏆 RANK #${myIdx+1} WERELDWIJD!`;
+
+    board.innerHTML='';
+    rows.forEach((r,i)=>{
+      const isMe=i===myIdx;
+      const row=document.createElement('div');
+      row.className='hsp-row'+(isMe?' me':'');
+      row.style.opacity='0';
+      row.innerHTML=`<span class="hsp-rank">${medals[i]||'#'+(i+1)}</span><span class="hsp-name${isMe?' me':''}">${r.name||'Speler'}</span><span class="hsp-pts${isMe?' me':''}">${r.score.toLocaleString('nl-NL')}</span>`;
+      board.appendChild(row);
+      setTimeout(()=>{
+        row.classList.add('fly-in');
+        if(isMe){
+          // Goudstof burst
+          const rc=row.getBoundingClientRect();
+          const cx=rc.left+rc.width/2,cy=rc.top+rc.height/2;
+          ['#ffd700','#ffaa20','#fff0a0'].forEach((col,k)=>{
+            for(let j=0;j<6;j++){
+              const p=document.createElement('div');
+              const a=Math.random()*Math.PI*2,dist=30+Math.random()*80,dur=0.4+Math.random()*0.4;
+              p.style.cssText=`position:fixed;left:${cx}px;top:${cy}px;width:4px;height:4px;border-radius:50%;background:${col};pointer-events:none;z-index:9999;--cpx:${Math.cos(a)*dist}px;--cpy:${Math.sin(a)*dist}px;animation:comboPart ${dur}s ease-out forwards`;
+              document.body.appendChild(p);setTimeout(()=>p.remove(),dur*1000+100);
+            }
+          });
+        }
+      },200+i*180);
     });
-}
-
-function _submitAndShow(myScore,naam){
-  _supabase.from('highscores').insert({name:naam,score:myScore})
-    .then(function(){
-      return _supabase.from('highscores').select('id').order('score',{ascending:false});
-    })
-    .then(function(res){
-      var all=res.data||[];
-      if(all.length>4){
-        var toDelete=all.slice(4);
-        toDelete.forEach(function(r){_supabase.from('highscores').delete().eq('id',r.id);});
-      }
-      return _supabase.from('highscores').select('name,score').order('score',{ascending:false}).limit(4);
-    })
-    .then(function(res){
-      var rows=res.data||[];
-      var myIdx=rows.findIndex(function(r){return r.name===naam&&r.score===myScore;});
-      var medals=['🥇','🥈','🥉','🏅'];
-
-      document.getElementById('hspScore').textContent=myScore.toLocaleString('nl-NL');
-      var rankEl=document.getElementById('hspRank');
-      if(myIdx===0) rankEl.textContent='🥇 WERELDRECORD!';
-      else if(myIdx>0) rankEl.textContent='🏆 RANK #'+(myIdx+1)+' WERELDWIJD!';
-      else rankEl.textContent='';
-
-      var board=document.getElementById('hspBoard');
-      board.innerHTML='';
-      rows.forEach(function(r,i){
-        var isMe=i===myIdx;
-        var row=document.createElement('div');
-        row.className='hsp-row'+(isMe?' me':'');
-        row.innerHTML='<span class="hsp-rank">'+medals[i]+'</span>'
-          +'<span class="hsp-name'+(isMe?' me':'')+'">'+r.name+'</span>'
-          +'<span class="hsp-pts'+(isMe?' me':'')+'">'+r.score.toLocaleString('nl-NL')+'</span>';
-        board.appendChild(row);
-        setTimeout(function(){row.classList.add('fly-in');},100+i*150);
-      });
-
-      document.getElementById('hsPopup').classList.add('show');
-    })
-    .catch(function(e){console.warn('HS show error:',e);});
+  }catch(e){board.innerHTML='<div style="color:rgba(255,80,80,.7);text-align:center;padding:10px;font-size:12px">Kon ranglijst niet laden</div>';}
 }
 // ── EINDE HIGHSCORE FLOW ─────────────────────────────────────────
 
-function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal,lvl){
-  toast('showResult: lvl='+lvl+' win='+win);
+function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal){
   const ov=document.getElementById('ovres');ov.classList.add('show');
   ov.style.animation='none';ov.offsetHeight;
   ov.style.animation='resultSlideIn .5s cubic-bezier(.34,1.2,.64,1) forwards';
@@ -2079,16 +2071,18 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal,lvl){
   const lvlEl=document.getElementById('lvlscr');
   let d=prevTotal;
   const step=Math.max(1000,Math.ceil((newTotal-prevTotal)/20));
+  const thisLevel=currentLevel;
   const scoreToCheck=newTotal;
-  const isLvl10Win=(win&&(lvl||currentLevel)===10);
-  toast('isLvl10Win='+isLvl10Win+' lvl='+(lvl||currentLevel));
 
   const iv=setInterval(()=>{
     d=Math.min(d+step,scoreToCheck);
     lvlEl.textContent=d.toLocaleString('nl-NL');
     if(d>=scoreToCheck){
       clearInterval(iv);
-      if(isLvl10Win) _doHSFlow(scoreToCheck);
+      // KLAAR MET TELLEN — direct naam modal als level 10 en in top4
+      if(thisLevel===10){
+        _doHSFlow(scoreToCheck);
+      }
     }
   },16);
 
