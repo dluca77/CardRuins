@@ -2051,6 +2051,7 @@ function _submitAndShow(myScore,naam){
 // ── EINDE HIGHSCORE FLOW ─────────────────────────────────────────
 
 function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal,lvl){
+  toast('showResult: lvl='+lvl+' win='+win);
   const ov=document.getElementById('ovres');ov.classList.add('show');
   ov.style.animation='none';ov.offsetHeight;
   ov.style.animation='resultSlideIn .5s cubic-bezier(.34,1.2,.64,1) forwards';
@@ -2080,6 +2081,7 @@ function showResult(win,levelTotal,gp,tb,cb,pb,prevTotal,newTotal,lvl){
   const step=Math.max(1000,Math.ceil((newTotal-prevTotal)/20));
   const scoreToCheck=newTotal;
   const isLvl10Win=(win&&(lvl||currentLevel)===10);
+  toast('isLvl10Win='+isLvl10Win+' lvl='+(lvl||currentLevel));
 
   const iv=setInterval(()=>{
     d=Math.min(d+step,scoreToCheck);
