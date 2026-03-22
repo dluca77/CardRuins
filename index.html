@@ -1977,6 +1977,7 @@ function _doHSFlow(myScore){
     .then(function(res){
       var scores=(res.data||[]).map(function(r){return r.score;});
       var inTop4=scores.length<4||myScore>scores[scores.length-1];
+      toast('HS: '+scores.length+' scores, jij: '+myScore+', top4: '+inTop4);
       if(!inTop4) return;
 
       // Altijd naam modal tonen — ook als naam al bekend
