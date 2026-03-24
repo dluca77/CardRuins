@@ -2135,7 +2135,10 @@ function showTimeBonusHint(){
   }
 }
 
+let _nextLvlBusy=false;
 function nextLvl(){
+  if(_nextLvlBusy)return;
+  _nextLvlBusy=true;
   clearInterval(_mpWaitInterval);
   clearInterval(_mpCountdownInt);
   _mpWaitInterval=null;
@@ -2152,6 +2155,7 @@ function nextLvl(){
     } else {
       initLevel(currentLevel);
     }
+    _nextLvlBusy=false;
   };
 
   const tr=document.getElementById('lvltransition');
