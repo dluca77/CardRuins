@@ -1201,11 +1201,11 @@ async function initLevel(level){
       p.push(r);
     }pyr.push(p);
   }
-  score=0;combo=0;frozen=false;_levelEnding=false;_pyrBonusClaimed=[false,false,false];_resetGameLog();
-  const _dpileReset=document.getElementById('dpile');if(_dpileReset){_dpileReset.style.pointerEvents='';_dpileReset.onpointerdown=drawCard;}
-  const _sceneReset=document.getElementById('scene');if(_sceneReset)_sceneReset.style.pointerEvents='';
+  score=0;combo=0;frozen=true;_levelEnding=false;_pyrBonusClaimed=[false,false,false];_resetGameLog();
+  const _dpileReset=document.getElementById('dpile');if(_dpileReset){_dpileReset.style.pointerEvents='none';_dpileReset.onpointerdown=null;}
+  const _sceneReset=document.getElementById('scene');if(_sceneReset)_sceneReset.style.pointerEvents='none';
   totalScore=levelScores.reduce((a,v)=>a+v,0);
-  timer=LEVEL_TIME[level];gameActive=true;
+  timer=LEVEL_TIME[level];gameActive=false;
   document.getElementById('lvlval').textContent=level+'/10';
   calcLayout();
   buildScene();
@@ -1215,6 +1215,11 @@ async function initLevel(level){
   renderHUD();
   await dealAnim();
   clearInterval(timerInt);
+  // Pas ná de deal-animatie klikken toestaan
+  frozen=false;
+  gameActive=true;
+  const _dpileReady=document.getElementById('dpile');if(_dpileReady){_dpileReady.style.pointerEvents='';_dpileReady.onpointerdown=drawCard;}
+  const _sceneReady=document.getElementById('scene');if(_sceneReady)_sceneReady.style.pointerEvents='';
   timerInt=setInterval(tick,1000);
 }
 
@@ -1447,6 +1452,10 @@ function drawCard(){
   // Stok bounce animatie
   const dp=document.getElementById('dpile');
   if(dp){dp.classList.remove('drawing');void dp.offsetWidth;dp.classList.add('drawing');setTimeout(()=>dp.classList.remove('drawing'),250);}
+  // Als dit de laatste kaart is, dpile direct uitschakelen
+  if(drawPile.length===1){
+    if(dp){dp.style.pointerEvents='none';dp.onpointerdown=null;}
+  }
   // Vibration (Android only)
   if(navigator.vibrate) navigator.vibrate(18);
   if(wasDiscardPlayable()){
