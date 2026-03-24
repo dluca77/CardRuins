@@ -1038,7 +1038,7 @@ function calcLayout(){
 }
 
 let drawPile,pyr,openCards,discard,bonusDiscard;
-let score,combo,timer,timerInt,gameActive,frozen;
+let score,combo,timer,timerInt,gameActive,frozen,_levelEnding=false;
 let _pyrBonusClaimed=[false,false,false];
 let currentLevel=1,levelScores=new Array(11).fill(0),totalScore=0;
 const rv=r=>RANKS.indexOf(r);
@@ -1201,7 +1201,7 @@ async function initLevel(level){
       p.push(r);
     }pyr.push(p);
   }
-  score=0;combo=0;frozen=false;_pyrBonusClaimed=[false,false,false];_resetGameLog();
+  score=0;combo=0;frozen=false;_levelEnding=false;_pyrBonusClaimed=[false,false,false];_resetGameLog();
   totalScore=levelScores.reduce((a,v)=>a+v,0);
   timer=LEVEL_TIME[level];gameActive=true;
   document.getElementById('lvlval').textContent=level+'/10';
@@ -1910,6 +1910,8 @@ function checkDeadlock(){
 }
 
 function endLevel(win){
+  if(_levelEnding)return;
+  _levelEnding=true;
   gameActive=false;clearInterval(timerInt);
   // Multiplayer: sync score
   if(_mp.roomId) _mpSyncScore();
@@ -4041,9 +4043,7 @@ async function _mpLoadLevel(level){
       p.push(r);
     }pyr.push(p);
   }
-  score=0;combo=0;frozen=false;_pyrBonusClaimed=[false,false,false];
-  totalScore=levelScores.reduce((a,v)=>a+v,0);
-  if(typeof achOnGameStart==='function')achOnGameStart();
+  score=0;combo=0;frozen=false;_levelEnding=false;_pyrBonusClaimed=[false,false,false];
   // Sync score immediately so MP bar shows correct accumulated score
   if(_mp.playerId) _supabase.from('room_players').update({score:totalScore}).eq('id',_mp.playerId).then(()=>{});
   timer=LEVEL_TIME[level];gameActive=true;
