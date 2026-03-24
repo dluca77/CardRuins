@@ -1912,6 +1912,7 @@ function checkDeadlock(){
 function endLevel(win){
   if(_levelEnding)return;
   _levelEnding=true;
+  frozen=true;
   gameActive=false;clearInterval(timerInt);
   // Multiplayer: sync score
   if(_mp.roomId) _mpSyncScore();
