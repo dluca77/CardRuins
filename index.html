@@ -1468,10 +1468,12 @@ function drawCard(){
       el.classList.remove('missed');
       discard=drawPile.pop();combo=0;bonusDiscard=null;renderHUD(true);
       frozen=false;
+      checkClear();
       checkDeadlock();
     },310);
   } else {
     discard=drawPile.pop();combo=0;if(typeof achOnTrek==="function")achOnTrek();bonusDiscard=null;renderHUD(true);
+    checkClear();
     checkDeadlock();
   }
 }
