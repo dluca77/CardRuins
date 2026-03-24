@@ -603,7 +603,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
       <div id="lt">RUINS</div>
       <div id="menu-divider"></div>
       <div id="menu-slogan">Beat the deck.</div>
-      <div id="menu-version">v1.3.1</div>
+      <div id="menu-version">v1.3.2</div>
     </div>
   </div>
   <div id="mright">
@@ -1437,7 +1437,9 @@ function wasDiscardPlayable(){
   for(let pi=0;pi<3;pi++)for(let row=0;row<3;row++)for(let col=0;col<pyr[pi][row].length;col++){const c=pyr[pi][row][col];if(!c.removed&&c.faceUp&&canPlay(c,discard))return true;}
   return false;
 }
-function drawCard(){sfxDraw();
+function drawCard(){
+  const now=Date.now();if(now-_lastClick<80)return;_lastClick=now;
+  sfxDraw();
   if(!gameActive||frozen)return;
   if(!drawPile.length){toast('Stok is leeg!');checkDeadlock();return;}
   // Stok bounce animatie
@@ -4607,7 +4609,7 @@ async function submitOnlineScore(score){
     <div style="background:rgba(10,4,0,.98);border-bottom:1px solid rgba(200,140,40,.2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5">
       <div>
         <div style="font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:3px;color:#ffd070">⚔️ ADMIN</div>
-        <div style="font-size:10px;color:rgba(255,100,80,.7);letter-spacing:2px">CARD RUINS v1.3.1</div>
+        <div style="font-size:10px;color:rgba(255,100,80,.7);letter-spacing:2px">CARD RUINS v1.3.2</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span id="aLastRefresh" style="font-size:10px;color:rgba(255,255,255,.25)"></span>
