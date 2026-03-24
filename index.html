@@ -1202,6 +1202,8 @@ async function initLevel(level){
     }pyr.push(p);
   }
   score=0;combo=0;frozen=false;_levelEnding=false;_pyrBonusClaimed=[false,false,false];_resetGameLog();
+  const _dpileReset=document.getElementById('dpile');if(_dpileReset){_dpileReset.style.pointerEvents='';_dpileReset.onpointerdown=drawCard;}
+  const _sceneReset=document.getElementById('scene');if(_sceneReset)_sceneReset.style.pointerEvents='';
   totalScore=levelScores.reduce((a,v)=>a+v,0);
   timer=LEVEL_TIME[level];gameActive=true;
   document.getElementById('lvlval').textContent=level+'/10';
@@ -1596,7 +1598,7 @@ function checkExposed(){
 }
 
 function checkPyrBonus(pi){sfxPyramid();if(pyr[pi].every(r=>r.every(c=>c.removed))){pulseTower(pi);fireworkBurst(pi);const b=getBasis()*15;score+=b;if(typeof achOnPyrLeeg==='function')achOnPyrLeeg(currentLevel,pi);renderHUD();toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'));}}
-function checkClear(){if(openCards.every(c=>c.removed)&&pyr.every(p=>p.every(r=>r.every(c=>c.removed))))endLevel(true);}
+function checkClear(){if(openCards.every(c=>c.removed)&&pyr.every(p=>p.every(r=>r.every(c=>c.removed)))){frozen=true;_levelEnding=true;endLevel(true);}}
 
 function refreshPyr(pi,row,col){
   const el=document.querySelector(`[data-pi="${pi}"][data-row="${row}"][data-col="${col}"]`);if(!el)return;
@@ -1905,6 +1907,7 @@ function checkDeadlock(){
   // No moves left - end level after short delay
   setTimeout(()=>{
     if(!gameActive)return;
+    frozen=true;
     endLevel(false);
   },600);
 }
@@ -1922,6 +1925,8 @@ function endLevel(win){
   document.getElementById('logotimer').classList.remove('danger');
   if(window._musicSetUrgency) window._musicSetUrgency(false);
   document.querySelectorAll('#scene .card').forEach(el=>{el.onclick=null;el.style.cursor='default';el.style.pointerEvents='none';});
+  const _dpile=document.getElementById('dpile');if(_dpile){_dpile.style.pointerEvents='none';_dpile.onpointerdown=null;}
+  const _scene=document.getElementById('scene');if(_scene)_scene.style.pointerEvents='none';
   const b=getBasis();
   const tb=win ? Math.round(timer*b*0.5) : 0;
   const neverOpened=drawPile.length; // kaarten die nooit getrokken zijn
@@ -4045,6 +4050,8 @@ async function _mpLoadLevel(level){
     }pyr.push(p);
   }
   score=0;combo=0;frozen=false;_levelEnding=false;_pyrBonusClaimed=[false,false,false];
+  const _dpileResetMp=document.getElementById('dpile');if(_dpileResetMp){_dpileResetMp.style.pointerEvents='';_dpileResetMp.onpointerdown=drawCard;}
+  const _sceneResetMp=document.getElementById('scene');if(_sceneResetMp)_sceneResetMp.style.pointerEvents='';
   // Sync score immediately so MP bar shows correct accumulated score
   if(_mp.playerId) _supabase.from('room_players').update({score:totalScore}).eq('id',_mp.playerId).then(()=>{});
   timer=LEVEL_TIME[level];gameActive=true;
