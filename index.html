@@ -603,7 +603,7 @@ body.menu-blur #bgimg{filter:blur(8px) brightness(0.6)}
       <div id="lt">RUINS</div>
       <div id="menu-divider"></div>
       <div id="menu-slogan">Beat the deck.</div>
-      <div id="menu-version">v1.3.2</div>
+      <div id="menu-version">v1.3.3</div>
     </div>
   </div>
   <div id="mright">
@@ -1201,11 +1201,11 @@ async function initLevel(level){
       p.push(r);
     }pyr.push(p);
   }
-  score=0;combo=0;frozen=true;_levelEnding=false;_pyrBonusClaimed=[false,false,false];_resetGameLog();
-  const _dpileReset=document.getElementById('dpile');if(_dpileReset){_dpileReset.style.pointerEvents='none';_dpileReset.onpointerdown=null;}
-  const _sceneReset=document.getElementById('scene');if(_sceneReset)_sceneReset.style.pointerEvents='none';
+  score=0;combo=0;frozen=false;_levelEnding=false;_pyrBonusClaimed=[false,false,false];_resetGameLog();
+  const _dpileReset=document.getElementById('dpile');if(_dpileReset){_dpileReset.style.pointerEvents='';_dpileReset.onpointerdown=drawCard;}
+  const _sceneReset=document.getElementById('scene');if(_sceneReset)_sceneReset.style.pointerEvents='';
   totalScore=levelScores.reduce((a,v)=>a+v,0);
-  timer=LEVEL_TIME[level];gameActive=false;
+  timer=LEVEL_TIME[level];gameActive=true;
   document.getElementById('lvlval').textContent=level+'/10';
   calcLayout();
   buildScene();
@@ -1215,11 +1215,6 @@ async function initLevel(level){
   renderHUD();
   await dealAnim();
   clearInterval(timerInt);
-  // Pas ná de deal-animatie klikken toestaan
-  frozen=false;
-  gameActive=true;
-  const _dpileReady=document.getElementById('dpile');if(_dpileReady){_dpileReady.style.pointerEvents='';_dpileReady.onpointerdown=drawCard;}
-  const _sceneReady=document.getElementById('scene');if(_sceneReady)_sceneReady.style.pointerEvents='';
   timerInt=setInterval(tick,1000);
 }
 
@@ -1452,10 +1447,8 @@ function drawCard(){
   // Stok bounce animatie
   const dp=document.getElementById('dpile');
   if(dp){dp.classList.remove('drawing');void dp.offsetWidth;dp.classList.add('drawing');setTimeout(()=>dp.classList.remove('drawing'),250);}
-  // Als dit de laatste kaart is, dpile direct uitschakelen
-  if(drawPile.length===1){
-    if(dp){dp.style.pointerEvents='none';dp.onpointerdown=null;}
-  }
+  // Disable dpile when last card is drawn
+  if(drawPile.length===1){if(dp){dp.style.pointerEvents='none';dp.onpointerdown=null;}}
   // Vibration (Android only)
   if(navigator.vibrate) navigator.vibrate(18);
   if(wasDiscardPlayable()){
@@ -1468,12 +1461,10 @@ function drawCard(){
       el.classList.remove('missed');
       discard=drawPile.pop();combo=0;bonusDiscard=null;renderHUD(true);
       frozen=false;
-      checkClear();
       checkDeadlock();
     },310);
   } else {
     discard=drawPile.pop();combo=0;if(typeof achOnTrek==="function")achOnTrek();bonusDiscard=null;renderHUD(true);
-    checkClear();
     checkDeadlock();
   }
 }
@@ -1609,7 +1600,7 @@ function checkExposed(){
 }
 
 function checkPyrBonus(pi){sfxPyramid();if(pyr[pi].every(r=>r.every(c=>c.removed))){pulseTower(pi);fireworkBurst(pi);const b=getBasis()*15;score+=b;if(typeof achOnPyrLeeg==='function')achOnPyrLeeg(currentLevel,pi);renderHUD();toast('🏛 TOREN LEEG! +'+b.toLocaleString('nl-NL'));}}
-function checkClear(){if(openCards.every(c=>c.removed)&&pyr.every(p=>p.every(r=>r.every(c=>c.removed)))){frozen=true;_levelEnding=true;endLevel(true);}}
+function checkClear(){if(openCards.every(c=>c.removed)&&pyr.every(p=>p.every(r=>r.every(c=>c.removed))))endLevel(true);}
 
 function refreshPyr(pi,row,col){
   const el=document.querySelector(`[data-pi="${pi}"][data-row="${row}"][data-col="${col}"]`);if(!el)return;
@@ -1918,7 +1909,6 @@ function checkDeadlock(){
   // No moves left - end level after short delay
   setTimeout(()=>{
     if(!gameActive)return;
-    frozen=true;
     endLevel(false);
   },600);
 }
@@ -1928,6 +1918,8 @@ function endLevel(win){
   _levelEnding=true;
   frozen=true;
   gameActive=false;clearInterval(timerInt);
+  const _dpile=document.getElementById('dpile');if(_dpile){_dpile.style.pointerEvents='none';_dpile.onpointerdown=null;}
+  const _scene=document.getElementById('scene');if(_scene)_scene.style.pointerEvents='none';
   // Multiplayer: sync score
   if(_mp.roomId) _mpSyncScore();
   // Danger state opruimen
@@ -1936,8 +1928,6 @@ function endLevel(win){
   document.getElementById('logotimer').classList.remove('danger');
   if(window._musicSetUrgency) window._musicSetUrgency(false);
   document.querySelectorAll('#scene .card').forEach(el=>{el.onclick=null;el.style.cursor='default';el.style.pointerEvents='none';});
-  const _dpile=document.getElementById('dpile');if(_dpile){_dpile.style.pointerEvents='none';_dpile.onpointerdown=null;}
-  const _scene=document.getElementById('scene');if(_scene)_scene.style.pointerEvents='none';
   const b=getBasis();
   const tb=win ? Math.round(timer*b*0.5) : 0;
   const neverOpened=drawPile.length; // kaarten die nooit getrokken zijn
@@ -4063,6 +4053,8 @@ async function _mpLoadLevel(level){
   score=0;combo=0;frozen=false;_levelEnding=false;_pyrBonusClaimed=[false,false,false];
   const _dpileResetMp=document.getElementById('dpile');if(_dpileResetMp){_dpileResetMp.style.pointerEvents='';_dpileResetMp.onpointerdown=drawCard;}
   const _sceneResetMp=document.getElementById('scene');if(_sceneResetMp)_sceneResetMp.style.pointerEvents='';
+  totalScore=levelScores.reduce((a,v)=>a+v,0);
+  if(typeof achOnGameStart==='function')achOnGameStart();
   // Sync score immediately so MP bar shows correct accumulated score
   if(_mp.playerId) _supabase.from('room_players').update({score:totalScore}).eq('id',_mp.playerId).then(()=>{});
   timer=LEVEL_TIME[level];gameActive=true;
@@ -4628,7 +4620,7 @@ async function submitOnlineScore(score){
     <div style="background:rgba(10,4,0,.98);border-bottom:1px solid rgba(200,140,40,.2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5">
       <div>
         <div style="font-family:'Russo One',sans-serif;font-size:13px;letter-spacing:3px;color:#ffd070">⚔️ ADMIN</div>
-        <div style="font-size:10px;color:rgba(255,100,80,.7);letter-spacing:2px">CARD RUINS v1.3.2</div>
+        <div style="font-size:10px;color:rgba(255,100,80,.7);letter-spacing:2px">CARD RUINS v1.3.3</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span id="aLastRefresh" style="font-size:10px;color:rgba(255,255,255,.25)"></span>
